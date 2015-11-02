@@ -1,0 +1,195 @@
+%
+% updateHa.m
+%
+% infers online the transition rate epsilon and the change-point count
+%
+
+eps = 0.5;                   % true transition rate 
+absEnv = 1;                  % absolute value of the environment
+sigma_noise=0.2;               % sd of noise dist P(\xi|H_\pm)
+nTimeSteps = 200;            % number of time steps 
+                                %(if nTimeSteps=100 then 0 \leq n \leq 99)
+
+% col and row indices corresponding to prior beliefs
+beforeObs=1;                 
+chptsBeforeObs=1;
+
+presentState=absEnv; % H_0=H_+ arbitrarily here
+states = zeros(nTimeSteps,1);    
+states(beforeObs)=presentState;   
+                                                               
+% The following matrix evaluated at row aIndx and col nIndx represents
+% P(H_n=H_+,a_n=aIndx-1|\xi_{1:n}) - with n=nIndx-1
+jointaHCondPlus = zeros(nTimeSteps-1,nTimeSteps); 
+jointaHCondMinus = zeros(nTimeSteps-1,nTimeSteps);%similarly for H_n=H_-                  
+% prior beliefs
+jointaHCondPlus(chptsBeforeObs,beforeObs) = 0.5;  
+jointaHCondMinus(chptsBeforeObs,beforeObs) = 0.5;
+
+% generate vector for values of the inferred epsilon
+epsN = 500;                        
+epsValues = linspace(0,1,epsN)';      % column vector                     
+epsInferred = zeros(epsN,nTimeSteps); % contains whole pdf for each n                           
+epsInferred(:,beforeObs) = 1/epsN;    % flat prior 
+            %(it might be problematic that this prior depends on epsN)
+            
+            
+%recursive algorithm
+
+%loop over time
+for timeIndx=1:nTimeSteps-1
+    nIndx=timeIndx+1;
+    %recall that n=nIndx-1 (n from the equations in the pdf)
+    %here, nIndx represents present time.
+    
+    presentState=nextEnvState(states(nIndx-1),eps);
+    states(nIndx)=presentState;
+    
+    %generate present observation 
+    xi = observe(presentState,sigma_noise);
+
+    %compute P(\xi|H_\pm)=f_\pm
+    fplus=normpdf(xi,absEnv,sigma_noise);
+    fminus=normpdf(xi,-absEnv,sigma_noise);
+    
+    %needed in equations
+    auxRatio = (nIndx-1)/nIndx; 
+    
+    %boundary cases - Eq.(22),(23) in infer_ar1018.pdf 
+    %cases a_n=0
+    jointaHCondPlus(1,nIndx) = fplus*auxRatio*... 
+                                    jointaHCondPlus(1,nIndx-1);             
+    jointaHCondMinus(1,nIndx) = fminus*auxRatio*...
+                                    jointaHCondMinus(1,nIndx-1);  
+    %cases a_n=n-1
+    if nIndx-1>1
+        jointaHCondPlus(nIndx-1,nIndx) = fplus*auxRatio*...
+                               jointaHCondMinus(nIndx-2,nIndx-1);            
+        jointaHCondMinus(nIndx-1,nIndx) = fminus*auxRatio*...
+                                jointaHCondPlus(nIndx-2,nIndx-1);
+    end
+    
+    %loop over change point count
+    for aIndx=2:nIndx-1             %case aIndx=1 already dealt with above
+        
+        %OLD LINE, NOT NEEDED I THINK: hp = 1-aIndx/nIndx; %1-(a_n+1)/n
+        
+        epsTilde=aIndx/nIndx;       %Eq. (19) from pdf
+        
+        %update equations (20),(21) in infer.pdf
+        jointaHCondPlus(aIndx,nIndx) = ...
+            fplus*((1-epsTilde)*jointaHCondPlus(aIndx,nIndx-1)...
+            + epsTilde*jointaHCondMinus(aIndx-1,nIndx-1));
+        jointaHCondMinus(aIndx,nIndx) = ...
+            fminus*((1-epsTilde)*jointaHCondMinus(aIndx,nIndx-1)...
+            + epsTilde*jointaHCondPlus(aIndx-1,nIndx-1));
+    end
+    
+    %normalize
+    Hs = sum(jointaHCondPlus(:,nIndx))+sum(jointaHCondMinus(:,nIndx));
+    jointaHCondPlus(:,nIndx)=jointaHCondPlus(:,nIndx)/Hs;
+    jointaHCondMinus(:,nIndx)=jointaHCondMinus(:,nIndx)/Hs;
+    
+    %get P(eps|\xi_{1:n}) - Eq.(26) from infer.pdf
+    for aIndx=1:nIndx-1
+        epsInferred(:,nIndx) = epsInferred(:,nIndx)...
+               + betapdf(epsValues,aIndx+1,nIndx-aIndx)...
+               *(jointaHCondPlus(aIndx,nIndx)...
+                            +jointaHCondMinus(aIndx,nIndx));
+    end
+end
+
+% vector containing the real number of change point at each timestep
+changePointCount=zeros(1,nTimeSteps);
+for i=2:nTimeSteps
+    if not(states(i)==states(i-1))
+        changePointCount(i)=changePointCount(i-1)+1;
+    else
+        changePointCount(i)=changePointCount(i-1);
+    end
+end
+
+% row vectors containing column sums
+condHPlus = sum(jointaHCondPlus);     %P(H_+|\xi_{1:n})
+condHMinus = sum(jointaHCondMinus);   %P(H_-|\xi_{1:n})
+
+R = condHPlus./condHMinus;       
+
+% plots
+% accumulated evidence (log posterior ratio) as function of time
+figure(1)
+
+%subplot(4,1,1);
+hold on;
+nRange=0:(nTimeSteps-1);
+plot(nRange,zeros(1,nTimeSteps),'k');            % plot line y=0
+plot(nRange,log(R),'b','linewidth',5);
+plot(nRange,10*heaviside(states)-5,'g','linewidth',3);% amplified states 
+
+set(gca,'fontsize',30);
+xlabel('$n$','fontsize',36,'interpreter','latex');
+ylabel('$\ln \left(\frac{P(H_+|\xi_{1:n})}{P(H_-|\xi_{1:n})}\right)$',...
+                                'fontsize',36,'interpreter','latex');
+
+                            
+% compute and plot inferred epsilon and its densities as fcn of time
+dEps=1/(epsN-1);   % interval length between two consecutive values of eps
+meanEpsInferred = dEps*epsValues'*epsInferred;
+figure(2)
+%subplot(4,1,2);
+pcolor(nRange,epsValues,epsInferred);
+shading flat
+colormap(hot);
+hold on
+plot(nRange,eps*ones(1,nTimeSteps),'c','linewidth',2);% real epsilon
+colorbar
+hold on
+plot(nRange,meanEpsInferred,'m','linewidth',3);
+
+xlabel('$n$','fontsize',36,'interpreter','latex');
+ylabel('$\varepsilon$','fontsize',36,'interpreter','latex');
+set(gca,'fontsize',30);
+title('$p(\varepsilon|\xi_{1:n})$','fontsize',36,'interpreter','latex')
+
+
+% figure(3)
+% hold on
+% % no change point
+% plot(nRange,jointaHCondPlus(1,:),'b','linewidth',3);
+% hold on
+% plot(nRange,jointaHCondMinus(1,:),'black','linewidth',3);
+% hold on
+% 
+% % each plotted line is a matrix row versus time
+% % that is, for fixed change point count, P(H_n=H_\pm,a_n=const|\xi_{1:n})
+% plot(nRange,jointaHCondPlus,'r','linewidth',3);
+% hold on
+% plot(nRange,jointaHCondMinus,'g','linewidth',3);
+% 
+% set(gca,'fontsize',24);
+% xlabel('$n$','fontsize',30,'interpreter','latex');
+% ylabel('$H_{\pm}(n)$','fontsize',30,'interpreter','latex');
+
+
+% for each timestep, compute P(a|\xi_{1:n}) by marginalizing over H_n
+aRange=0:(nTimeSteps-2);
+marg_an = jointaHCondPlus+jointaHCondMinus;
+mean_a = aRange*marg_an;
+% plot change point count probabilities at each timestep
+figure(4)
+%subplot(4,1,4);
+pcolor(nRange,aRange,marg_an); 
+shading flat
+colormap(hot);
+hold on
+% plots the line y=eps*x ; WHY?
+%plot(nRange,eps*nRange,'c','linewidth',2);
+colorbar
+hold on
+plot(nRange,mean_a,'m','linewidth',3);
+plot(nRange,changePointCount,'g','linewidth',2);
+caxis([0 0.1])
+xlabel('$n$','fontsize',36,'interpreter','latex');
+ylabel('$a_n$','fontsize',36,'interpreter','latex');
+set(gca,'fontsize',30); axis([1 nTimeSteps 1 2*eps*nTimeSteps]); 
+title('$p(a_n|\xi_{1:n})$','fontsize',36,'interpreter','latex');
