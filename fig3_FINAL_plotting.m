@@ -1,9 +1,10 @@
-%plots figure 3 using 3 .mat files
+%plot figure 3 using the 3 .mat files appearing below
+
 clear
-datapath='~/matlab_neuralcomp/data/';
-panelsAB=[datapath,'fig3AB.mat'];      % panels AB all curves
-panelCu=[datapath,'fig3Cu.mat'];        % panel C unknown rates
-panelCk=[datapath,'fig3c_FINAL_uh_2.mat'];             % panel C known rates
+datapath='~/matlab_neuralcomp/data/';  %where the required .mat files are stored
+panelsAB=[datapath,'fig3AB.mat'];               % panels AB all curves
+panelCu=[datapath,'fig3Cu.mat'];                % panel C unknown rates
+panelCk=[datapath,'fig3c_FINAL_uh_2.mat'];      % panel C known rates
 
 tiny=0.009; %for fine tuning
 posa=[0,0,1/3-tiny,1];
