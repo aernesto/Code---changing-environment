@@ -4,7 +4,7 @@ clear
 
 imagepath='~/images/fig4/';             %where you want the figure to be saved
 datapath='~/matlab_neuralcomp/data/';   %where to find the required .mat file
-filename='fig4_AC_uh6';                 %name of the required .mat file
+filename='fig4AC';                 %name of the required .mat file
 load([datapath,filename,'.mat'])
 filenamesave='fig4';                    %how the .png figure file should be named
 
