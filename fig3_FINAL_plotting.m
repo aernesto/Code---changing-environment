@@ -1,7 +1,7 @@
 %plots figure 3 using 3 .mat files
 clear
 datapath='~/matlab_neuralcomp/data/';
-panelsAB=[datapath,'fig3ab_opuntia_FINAL_1.mat'];      % panels AB all curves
+panelsAB=[datapath,'fig3AB.mat'];      % panels AB all curves
 panelCu=[datapath,'fig3c_unknown_FINAL_opuntia_2.mat'];% panel C unknown rates
 panelCk=[datapath,'fig3c_FINAL_uh_2.mat'];             % panel C known rates
 
