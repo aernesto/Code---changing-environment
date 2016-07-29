@@ -8,7 +8,7 @@
 
 clear
 datapath='~/MatlabCode/data/'; %path where you want to save the .mat file
-filename='fig3AB_data';        %how you want to call the .mat file
+filename='fig3AB';        %how you want to call the .mat file
 %parallel pool settings
 nCores=19;                     %number of cores
 nTimePoints=200;               %number of points on curve
