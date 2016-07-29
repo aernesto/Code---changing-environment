@@ -1,4 +1,4 @@
-%figure 1: aim is to represent the evolution of a 2-state symmetric 
+%figure 1 panel B: aim is to represent the evolution of a 2-state symmetric 
 %environment together with the evolution of the change-point count
 clear
 
