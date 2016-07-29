@@ -3,7 +3,7 @@
 
 clear
 datapath='~/MatlabCode/data/'; %where you want the .mat file to be saved
-filename='fig3C';              %how the .mat file will be called
+filename='fig3Cu';              %how the .mat file will be called
 parpool(19);
 N=5000;                 %number of time steps
 nSims=100000;
