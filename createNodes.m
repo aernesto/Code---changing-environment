@@ -1,4 +1,6 @@
 function d=createNodes(n)
+%returns a matrix containing all the nodes P_n(H^\pm,a_n)
+%one node is represented as a row vector of length 5. The first entry is H_n and the remaining 4 stand for the entries of the matrix a_n
 %n>1 is an integer
 
 nRows=n*(n-1)+2;
@@ -48,4 +50,3 @@ for m=1:n-1
 end
 d=tempMat;
 end
-%function checked up until n=4
