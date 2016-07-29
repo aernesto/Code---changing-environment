@@ -104,9 +104,6 @@ H2(2).LineWidth=axWidth;
 
 axa.OuterPosition=aposition;
 
-%saveas(fig1,[imagepath,filename,'_1.png'])
-
-
 
 %%%%%%%%%%%%%%%%% PANEL B
 
@@ -119,38 +116,17 @@ threestate=[3,9,27,75,186,414,840,1578,2784,4662,7476,11556,...
     17313,25245,35955,50157,68697,92559,122889,161001,208404,...
     266808,338154,424620,528654]';
 
-%fit3=fit(time,threestate,'poly3');
-%fit4=fit(time,threestate,'poly4');
-%fit5=fit(time,threestate,'poly5');
-%fit6=fit(time,threestate,'poly6');
-
-% p3=plot(fit5,time,threestate);
-% p3(1).Color='m';
-% p3(1).Marker='o';
-% p3(2).Color='r';
 axb=subplot('Position',bposition);
 
 hold on
 p4=plot(time(toplotB),threestate(toplotB),'^b','MarkerSize',mk,'LineWidth',axWidth);
-%p4(1).Color='b';
-%p4(1).Marker='^';
-%p4(1).MarkerSize=mk;
-%p4(1).LineWidth=axWidth;
-% p4(2).Color='k';
-% p4(2).LineWidth=axWidth;
-
-%p5=plot(fit5,time,threestate);
-%p6=plot(fit6,time,threestate);
-
 q=plot(time(toplotB),twostate(toplotB),'ob','MarkerSize',mk,'LineWidth',axWidth);
 hold off
-%semilogy([twostate,threestate],'o','LineWidth',2)
 xlabel('$n$','Interpreter','latex')
 ylabel('number of nodes','Interpreter','latex')
 mylegend=legend([p4(1);q],{'$N=3$','$N=2$'},...
     'Interpreter','latex','Position',blegendpos);
 mylegend.Box='off';
-%ax=gca;
 axb.TickLabelInterpreter='latex';
 axb.LineWidth=axWidth;
 axb.FontSize=fsBig;
