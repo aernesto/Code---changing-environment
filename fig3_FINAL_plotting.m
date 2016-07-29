@@ -2,7 +2,7 @@
 clear
 datapath='~/matlab_neuralcomp/data/';
 panelsAB=[datapath,'fig3AB.mat'];      % panels AB all curves
-panelCu=[datapath,'fig3c_unknown_FINAL_opuntia_2.mat'];% panel C unknown rates
+panelCu=[datapath,'fig3Cu.mat'];        % panel C unknown rates
 panelCk=[datapath,'fig3c_FINAL_uh_2.mat'];             % panel C known rates
 
 tiny=0.009; %for fine tuning
