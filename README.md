@@ -14,13 +14,16 @@ Our article deals with complexifications of the case described above, where the 
 All scripts were written for MATLAB_R2015b release.
 
 ###Figure 1
-Scripts:*fig1B_data.m*, *fig1_FINAL_plotting.m*
+Scripts: *fig1B_data.m*, *fig1_FINAL_plotting.m*
 
 No real computation is performed by those scripts which only had an illustrative aim.
 
 Run the script *fig1B_data.m* to produce a *.mat* file. Run subsequently *fig1_FINAL_plotting.m* to produce figure 1 from our article.
 
 ###Figure 2
+Scripts: *fig2CD_data.m*, *fig2_FINAL_plotting.m*
+
+These scripts
 
 ###Figure 3
 ###Figure 4
