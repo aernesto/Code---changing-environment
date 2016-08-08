@@ -15,6 +15,9 @@ All scripts were written for MATLAB_R2015b release.
 
 ###Figure 1
 
-###Figure 1
-###Figure 1
-###Figure 1
+###Figure 2
+###Figure 3
+###Figure 4
+
+##Corresponding author for the scripts 
+adrian@math.uh.edu
