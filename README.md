@@ -5,8 +5,8 @@ This repository contains the MATLAB scripts that were used in the article ["Evid
 ##A few words on the topic
 For full information and bibliography, see our [article](https://arxiv.org/abs/1607.08318).
 
-The problem that we study, in its simplest form, is the following: an environment Hn alternates between two values, say H+ and H-, where n is the discrete time variable and Hn is a homogeneous discrete time Markov chain. We say that the environment is *symmetric* when the transition probabilities H+ -> H- and H- -> H+ are the same. We call this probability epsilon. 
-An *ideal observer* makes noisy observations of Hn at each time n. The noise distributions are known. The observer's main aim is to decide which state the environment is in at any present time. A subordinate aim is to learn the transition probability epsilon.  
+The problem that we study, in its simplest form, is the following: an environment Hn alternates between two values, say H+ and H-, where n is the discrete time variable and Hn is a homogeneous discrete time Markov chain. We say that the environment is **symmetric** when the transition probabilities H+ -> H- and H- -> H+ are the same. We call this probability epsilon. 
+An **ideal observer** makes noisy observations of Hn at each time n. The noise distributions are known. The observer's main aim is to decide which state the environment is in at any present time. A subordinate aim is to learn the transition probability epsilon.  
 
 Our article deals with complexifications of the case described above, where the 2 transition probabilities are distinct, where the environment can take on N values for N >= 2, and where time becomes continuous. The code present in this repository only deals with discrete time, and with the exception of figure 4, with the 2-state symmetric case.
 
@@ -14,10 +14,14 @@ Our article deals with complexifications of the case described above, where the 
 All scripts were written for MATLAB_R2015b release.
 
 ###Figure 1
-_try_
+Scripts:*fig1B_data.m*, *fig1_FINAL_plotting.m*
 
+No real computation is performed by those scripts which only had an illustrative aim.
+
+Run the script *fig1B_data.m* to produce a *.mat* file. Run subsequently *fig1_FINAL_plotting.m* to produce figure 1 from our article.
 
 ###Figure 2
+
 ###Figure 3
 ###Figure 4
 
