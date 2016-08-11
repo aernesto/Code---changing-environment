@@ -1,6 +1,6 @@
 #Evidence accumulation and change rate inference in dynamic environments
 
-This repository contains the MATLAB scripts that were used in the article ["Evidence accumulation and change rate inference in dynamic environment"](https://arxiv.org/abs/1607.08318) by Adrian E. Radillo, Alan Veliz-Cuba, Kresimir Josic, Zachary P. Kilpatrick.
+This repository contains the MATLAB scripts that were used in the article ["Evidence accumulation and change rate inference in dynamic environments"](https://arxiv.org/abs/1607.08318) by Adrian E. Radillo, Alan Veliz-Cuba, Kresimir Josic, Zachary P. Kilpatrick.
 
 ##A few words on the topic
 For full information and bibliography, see our [article](https://arxiv.org/abs/1607.08318).
@@ -23,13 +23,19 @@ Run the script *fig1B_data.m* to produce a *.mat* file. Run subsequently *fig1_F
 ###Figure 2
 Scripts: *fig2CD_data.m*, *fig2_FINAL_plotting.m*
 
-These scripts
+Panel A from figure 2 in the article was sketched manually with a drawing software. The data required to plot panels C and D is produced by the script *fig2CD_data.m*. Running it will produce 2 *.mat* files as output. These are in turn used by the final plotting script *fig2_FINAL_plotting.m*. Note that panel B from the figure also has a purely illustrative purpose and is therefore not simulated via the Markov chain Hn.  
 
 ###Figure 3
 Scripts: *fig3AB_data.m*, *fig3Ck_data.m*, *fig3Cu_data.m*, *fig3_FINAL_plotting.m*
 
+As before, all the scripts ending with *data.m* should be run before the *fig3_FINAL_plotting.m* script.
+Each one of the *data.m* script will produce its own *.mat* file. Both *fig3Ck_data.m* and *fig3Cu_data.m* are required for producing the data relative to panel C.
+
 ###Figure 4
 Scripts: *enfants.m*, *createNodes.m*, *fig4AC_data.m*, *fig4_FINAL_plotting.m*
+
+The scripts *enfants.m* and *createNodes.m* are MATLAB functions used in *fig4AC_data.m*. The latter outputs a *.mat* file required
+for the final plotting script *fig4_FINAL_plotting.m*. Panel B from figure 4 contains the list of node counts for the 3-state case hard-coded. These numbers were computed using a combination of Shell and MATLAB. For more information, contact the corresponding author for this repository.
 
 ##Corresponding author for the scripts 
 adrian@math.uh.edu
