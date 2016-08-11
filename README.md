@@ -26,7 +26,13 @@ Scripts: *fig2CD_data.m*, *fig2_FINAL_plotting.m*
 These scripts
 
 ###Figure 3
+Scripts: *fig3AB_data.m*, *fig3Ck_data.m*, *fig3Cu_data.m*, *fig3_FINAL_plotting.m*
+
 ###Figure 4
+Scripts: *enfants.m*, *createNodes.m*, *fig4AC_data.m*, *fig4_FINAL_plotting.m*
 
 ##Corresponding author for the scripts 
 adrian@math.uh.edu
+
+##License
+See the [LICENSE.txt](../LICENSE.txt) file in this repository.
