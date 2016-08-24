@@ -41,4 +41,4 @@ for the final plotting script *fig4_FINAL_plotting.m*. Panel B from figure 4 con
 adrian@math.uh.edu
 
 ##License
-See the [LICENSE.txt](../LICENSE.txt) file in this repository.
+See the [LICENSE.txt](../master/LICENSE.txt) file in this repository.
