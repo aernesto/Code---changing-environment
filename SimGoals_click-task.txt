@@ -8,11 +8,15 @@ count at every time step, recursively.
 We would like to address the following questions both theoretically and 
 numerically:
 
+------------------------------------------------------------------------
+
 QUESTION 1: 
 How does the joint probability mass evolve in time, as a function of the
 type of evidence collected (00,11,10,01), and as Delta t ---> 0?
 In particular, are there delta jumps for the observations 01,10, and 
 continuous variation for 00 and 11?
+
+------------------------------------------------------------------------
 
 QUESTION 2:
 How does the variance of the posterior over the change rate decay?
@@ -21,6 +25,7 @@ the change rate be learned by the observer?
 The answer will depend at least on the SNR and on the value of the 
 change rate.
 
+------------------------------------------------------------------------
 
 QUESTION 3:
 The third question is more general and not specific to this task.
@@ -32,8 +37,3 @@ A few parameters to manipulate are:
 - type of algorithm: a) ideal-obs with delta prior on rate
 b) ideal-obs with non-delta prior on rate
 c) naive observer, with no integration of history
-
-
-
-
-
