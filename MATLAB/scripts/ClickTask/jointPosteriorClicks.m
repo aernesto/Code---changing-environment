@@ -1,7 +1,7 @@
-function P=jointPosteriorClicks(obs, kappa)
+function P=jointPosteriorClicks(obs)
 %% TODO: store joint posterior P 
 global N         % number of time steps
-
+global kappa     % proxy for SNR
 %Hpn below is the vector of joint probabilities (P_n(H^+,a))_a
 %n and c stand for n and current respectively
 Hpn = zeros(N,1);
