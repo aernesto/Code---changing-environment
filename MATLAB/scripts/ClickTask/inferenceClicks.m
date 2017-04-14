@@ -17,11 +17,11 @@ global h    % hazard rate, in Hz
     h=5;
     
 % Generate the environment
-S=genClickEnvt();
+[E,ct]=genClickEnvt();
 
 
 % Generate the observations
-obs=genClickObs(S);
+obs=genClickObs(E,ct);
 
 
 % perform inference
