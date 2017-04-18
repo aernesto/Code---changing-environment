@@ -1,17 +1,19 @@
-function [E,ct]=genClickEnvt()
-%returns a column vector 
+function [ct,E]=genClickEnvt()
+%returns two column vectors: 
+    %ct contains the change point times
+    %E of length length(ct)+1, contains the states S+ and S-, as 1 and 0
+    %respectively.
+
 global stimulusLength
 global h
 
-ct=genPoissonTrain(h, stimulusLength);
-ct=[ct;-1]; %a negative value is appended to ct only to give it the same 
-%size as E
+ct=genPoissonTrain(h, stimulusLength); % generate change point times
 
-E=zeros(size(ct));
+E=zeros(length(ct)+1,1);
 idx=1; % initialize idx for coming while loop
 
 % draw initial state uniformly
-initialState=round(rand); % 0 codes for S1 ,1 for S2
+initialState=round(rand); % 0 codes for S- ,1 for S+
 E(idx)=initialState;
 
 while idx < length(E)

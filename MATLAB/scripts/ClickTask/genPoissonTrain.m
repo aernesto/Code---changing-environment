@@ -1,7 +1,7 @@
 function t=genPoissonTrain(rate,timeLength)
 %generates poisson train of timeLength seconds with rate rate in Hz, 
 %using the Gillespie algorithm.
-t=zeros(10*rate*timeLength,1); %pre-allocate ten times the mean array size 
+t=zeros(ceil(10*rate*timeLength),1); %pre-allocate ten times the mean array size 
 %for speed, will be shrinked after computation
 totalTime=0;
 eventIndex=0;
@@ -11,7 +11,16 @@ eventIndex=0;
         eventIndex=eventIndex+1;
         t(eventIndex) = totalTime;
     end
-%trim unused nodes
-[~,I]=max(t);
-t=t(1:I);
+    
+%trim unused nodes, and maybe last event if occurred beyond timeLength
+[lastEvent,idxLastEvent]=max(t);
+if lastEvent > timeLength
+    idxLastEvent = idxLastEvent - 1;
+end
+
+if idxLastEvent == 0
+    t=zeros(0,1); %return empty vector if no event occurred in time interval
+else
+    t=t(1:idxLastEvent);
+end
 end
