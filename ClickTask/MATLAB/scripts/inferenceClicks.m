@@ -17,12 +17,13 @@ global stimulusLength
     stimulusLength=.5;
     
 global dt       % time step for time discretization
-    dt=1e-3;   % 50 msec
+    dt=1e-3;   % 1 msec
     
 global h    % hazard rate, in Hz
     h=5;
     
 global obs  % to be computed later
+global N    % to be computer later
 tic
 % Generate the environment
 [ct,E]=genClickEnvt();              % this only decides on S+ versus S-
@@ -39,12 +40,11 @@ P=jointPosteriorClicks(lTrain,rTrain);
 toc
 
 % extract portion of stimulus that contains both 01 and 10 observations
-nObs=size(obs,1);
 wSize = 8; % sliding window size
 startIdx = 1;
 endIdx = wSize;
 found = false;
-while (endIdx < nObs) && (~found)
+while (endIdx < N) && (~found)
     window=obs(startIdx:endIdx,:);
     found = sum(ismember([0,1;1,0],window,'rows')) > 1;
     if found
@@ -56,7 +56,22 @@ end
 endIdx = endIdx + 1;
 
 % plot joint posterior
-figure
-plotClicksJointPosterior(P,[startIdx,endIdx])
+
+% figure
+% plotClicksJointPosterior(P,[startIdx,endIdx])
+
 plot2DClicksJointPosterior(P,[startIdx,endIdx])
+
+% compute posterior mean over change point count
+mean_cpc = meanPostCPClicks(P); %mean change point count
+
+% plot posterior mean of change point count
+figure
+plot(mean_cpc,'LineWidth',3);
+title('Posterior mean of change point count')
+xlabel('msec')
+ylabel('change point count')
+ax = gca;
+ax.FontSize=20;
+
 

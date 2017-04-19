@@ -11,8 +11,8 @@ lBinTrain=binTrain(lTrain,dt,stimulusLength);
 rBinTrain=binTrain(rTrain,dt,stimulusLength);
 global obs
     obs=[lBinTrain,rBinTrain]; % each row is an observation: 00,01,10,11
-
-N = length(lBinTrain); % total number of observations (i.e. time steps)
+global N
+    N = length(lBinTrain); % total number of observations (i.e. time steps)
 
 %Hpn below is the vector of joint probabilities (P_n(S^+,a))_a
 %n and c stand for new and current respectively
