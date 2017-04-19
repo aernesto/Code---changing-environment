@@ -21,6 +21,8 @@ global dt       % time step for time discretization
     
 global h    % hazard rate, in Hz
     h=5;
+    
+global obs  % to be computed later
 tic
 % Generate the environment
 [ct,E]=genClickEnvt();              % this only decides on S+ versus S-
@@ -35,8 +37,26 @@ plotClickTrains(lTrain,rTrain,ct)
 % perform inference
 P=jointPosteriorClicks(lTrain,rTrain);
 toc
+
+% extract portion of stimulus that contains both 01 and 10 observations
+nObs=size(obs,1);
+wSize = 8; % sliding window size
+startIdx = 1;
+endIdx = wSize;
+found = false;
+while (endIdx < nObs) && (~found)
+    window=obs(startIdx:endIdx,:);
+    found = sum(ismember([0,1;1,0],window,'rows')) > 1;
+    if found
+        break
+    end
+    startIdx = endIdx + 1;
+    endIdx = endIdx + wSize;
+end
+endIdx = endIdx + 1;
+
 % plot joint posterior
 figure
-plotClicksJointPosterior(P,[321,336])
+plotClicksJointPosterior(P,[startIdx,endIdx])
 
 
