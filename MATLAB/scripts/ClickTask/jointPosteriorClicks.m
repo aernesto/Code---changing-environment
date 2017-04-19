@@ -9,7 +9,8 @@ global dt        % time bin width
 % bin both trains and form matrix of observations
 lBinTrain=binTrain(lTrain,dt,stimulusLength);
 rBinTrain=binTrain(rTrain,dt,stimulusLength);
-obs=[lBinTrain,rBinTrain]; % each row is an observation: 00,01,10,11
+global obs
+    obs=[lBinTrain,rBinTrain]; % each row is an observation: 00,01,10,11
 
 N = length(lBinTrain); % total number of observations (i.e. time steps)
 

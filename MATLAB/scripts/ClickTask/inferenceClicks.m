@@ -17,7 +17,7 @@ global stimulusLength
     stimulusLength=.5;
     
 global dt       % time step for time discretization
-    dt=50e-3;   % 50 msec
+    dt=1e-3;   % 50 msec
     
 global h    % hazard rate, in Hz
     h=5;
@@ -37,6 +37,6 @@ P=jointPosteriorClicks(lTrain,rTrain);
 toc
 % plot joint posterior
 figure
-plotClicksJointPosterior(P)
+plotClicksJointPosterior(P,[321,336])
 
 
