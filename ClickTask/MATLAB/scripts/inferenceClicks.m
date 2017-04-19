@@ -53,7 +53,14 @@ while (endIdx < N) && (~found)
     startIdx = endIdx + 1;
     endIdx = endIdx + wSize;
 end
-endIdx = endIdx + 1;
+endIdx = startIdx + 1;
+if ~found
+    fprintf(['no window with 10 and 01 close enough was found\n',...
+        'default back to window centered at change point\n'])
+    startIdx = floor(ct(1)/dt);
+    endIdx = startIdx+wSize;
+end
+
 
 % plot joint posterior
 
