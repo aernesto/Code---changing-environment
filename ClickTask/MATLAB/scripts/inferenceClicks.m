@@ -58,5 +58,5 @@ endIdx = endIdx + 1;
 % plot joint posterior
 figure
 plotClicksJointPosterior(P,[startIdx,endIdx])
-
+plot2DClicksJointPosterior(P,[startIdx,endIdx])
 

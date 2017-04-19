@@ -1,5 +1,5 @@
 function P=jointPosteriorClicks(lTrain,rTrain)
-% TODO: store joint posterior P 
+% returns joint posterior P 
 
 % global variables
 %global kappa     % proxy for SNR
