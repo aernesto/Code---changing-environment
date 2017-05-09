@@ -1,6 +1,7 @@
 function perf=perfGenPrior(SNR,T,h,alpha,beta,nSims)
 % Compute the performance of the ideal-observer model for a single point in
 % parameter space.
+%
 % ARGUMENTS:
 %   SNR = positive scalar   Signal-to-Noise Ratio
 %   T = integer             interrogation time
@@ -11,18 +12,15 @@ function perf=perfGenPrior(SNR,T,h,alpha,beta,nSims)
 % OUTPUT:
 %   perf is a scalar between 0 and 1
 
-nTimePoints=1;               %number of points on curve
-
-timePoints=floor(linspace(T,T,nTimePoints)); %points for which 
-                                                        %sims are run
-
-%frequency of correct answers at each time point for unknown rate algorithm
-perf=zeros(nTimePoints,1);
+timePoints=floor(linspace(T,T)); %points for which sims are run
 
 %frequency of correct answers at each time point for known rate algorithms
 m = 1;                      %half the distance between means of likelihoods
 
 sigma=2*m/SNR;              %sd of likelihoods
+
+
+priorPrec=alpha+beta;
 
 %start loop on time points
 c=1;
