@@ -1,49 +1,28 @@
-function plot_perf_SNR_T(h,alpha,beta)
+function plot_perf_SNR_T(hval,alphaval,betaval, filename)
 % plots performance as pcolor plot, 
 % ARGS:
 % h, alpha, beta are frozen values
 % OUTPUT: a pcolor plot where,
 % x axis is interrogation time
 % y axis is SNR
+% filename: .mat file containing the performance data as a table with 
+% name perfTable
 
-matObj = matfile('perf5DArray.mat');
+load(filename)
 
-% re-create indices for 5D array
-range_SNR=.3:.3:3;
-    ls=length(range_SNR);
-    
-range_T=1:15:500;
-    lt=length(range_T);
-    
-range_h=.1:.2:.9;
-    lh=length(range_h);
-    
-range_alpha=1:8;
-    la=length(range_alpha);
-    
-range_beta=1:8;
-    lb=length(range_beta);
+%conditions on table freeze h, alpha, beta
+rows = perfTable.h==hval & perfTable.alpha==alphaval &...
+    perfTable.beta==betaval;
+vars = {'SNR','T','perf'};
+perfMatrix=perfTable{rows,vars};
 
-%freeze h, alpha, beta
-dummy=1:lh;
-hIdx=dummy(range_h == h);
-
-dummy=1:la;
-aIdx=dummy(range_alpha == alpha);
-
-dummy=1:lb;
-bIdx=dummy(range_beta == beta);
-
-% Only load data to plot into workspace    
-perfData=squeeze(matObj.perfArray(:,:,hIdx,aIdx,bIdx));
-
-PLOT=pcolor(perfData);
+PLOT=pcolor(perfMatrix(:,2),perfMatrix(:,1),perfMatrix(:,3));
 colormap(bone)
 [cmin,cmax]=caxis;
 caxis([.5,cmax]) % set floor color to perf of 50%
 colorbar
-title(['Performance 1000 sims ','h=',num2str(h),...
-    ' alpha=',num2str(alpha),' beta=',num2str(beta)])
+title(['Performance 1000 sims ','h=',num2str(hval),...
+    ' alpha=',num2str(alphaval),' beta=',num2str(betaval)])
 xlabel('Interrogation time')
 ylabel('SNR')
 ax=gca;
