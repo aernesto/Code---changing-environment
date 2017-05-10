@@ -1,15 +1,14 @@
 # Scripts simulating ideal-observer decision processes in changing environments
-This repository contains, so far, three projects, whose corresponding folders are listed below:
+This repository contains, so far, three projects, whose corresponding folders are:
 NeuralCompCode/
 ClickTask/
-PerformanceSims/
-We summarize the projects below.
+PerformanceSims/.
 
 # NeuralCompCode/
 
 This folder contains the MATLAB scripts that were used in the article ["Evidence accumulation and change rate inference in dynamic environments"](https://arxiv.org/abs/1607.08318) by Adrian E. Radillo, Alan Veliz-Cuba, Kresimir Josic, Zachary P. Kilpatrick.
 
-##A few words on the topic
+## A few words on the topic
 For full information and bibliography, see our [article](https://arxiv.org/abs/1607.08318).
 
 The problem that we study, in its simplest form, is the following: an environment Hn alternates between two values, say H+ and H-, where n is the discrete time variable and Hn is a homogeneous discrete time Markov chain. We say that the environment is **symmetric** when the transition probabilities H+ -> H- and H- -> H+ are the same. We call this probability epsilon. 
@@ -60,20 +59,20 @@ count at every time step, recursively.
 We would like to address the following questions both theoretically and 
 numerically:
 
-## QUESTION 1: 
+## Question 1: 
 How does the joint probability mass evolve in time, as a function of the
 type of evidence collected (00,11,10,01), and as Delta t ---> 0?
 In particular, are there delta jumps for the observations 01,10, and 
 continuous variation for 00 and 11?
 
-## QUESTION 2:
+## Question 2:
 How does the variance of the posterior over the change rate decay?
 This corresponds to the high-level question: How well and quickly can 
 the change rate be learned by the observer?
 The answer will depend at least on the SNR and on the value of the 
 change rate.
 
-## QUESTION 3:
+## Question 3:
 The third question is more general and not specific to this task.
 How is performance impacted by the evidence accumulation model?
 A few parameters to manipulate are:
