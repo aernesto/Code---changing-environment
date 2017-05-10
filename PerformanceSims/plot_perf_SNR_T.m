@@ -1,4 +1,11 @@
 function plot_perf_SNR_T(h,alpha,beta)
+% plots performance as pcolor plot, 
+% ARGS:
+% h, alpha, beta are frozen values
+% OUTPUT: a pcolor plot where,
+% x axis is interrogation time
+% y axis is SNR
+
 matObj = matfile('perf5DArray.mat');
 
 % re-create indices for 5D array
