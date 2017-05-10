@@ -3,20 +3,10 @@ function computePerf(filename, linearIdx, nSims)
 % performance array filename
 
 % create MAT-file object
-matObj = matfile(filename);
+matObj = matfile(filename, 'Writable', true);
 
-% extract size of performance array
-s = size(matObj.perfArray);
+params = matObj.perfTable(linearIdx,1:end-1);
 
-% convert linear index into usual indices
-[idx1,idx2,idx3,idx4,idx5] = ind2sub(s,linearIdx);
-
-% fetch necessary values for simulation
-[SNR,T,h,alpha,beta]=fetchValues(filename,idx1,idx2,idx3,idx4,idx5);
-
-% compute the performance
-perf = perfGenPrior(SNR,T,h,alpha,beta,nSims);
-
-% store the performance
-writeToFile(filename,idx1,idx2,idx3,idx4,idx5,perf);
+% compute the performance and write it to file
+matObj.perfTable(linearIdx,end) = perfGenPrior(params,nSims);
 end

@@ -1,16 +1,25 @@
-function perf=perfGenPrior(SNR,T,h,alpha,beta,nSims)
+function perf=perfGenPrior(params,nSims)
 % Compute the performance of the ideal-observer model for a single point in
 % parameter space.
 %
-% ARGUMENTS:
+% ARGUMENTS: 
+% The 5 components of the vector params are
 %   SNR = positive scalar   Signal-to-Noise Ratio
 %   T = integer             interrogation time
 %   h = between 0 and 1     hazard rate
 %   alpha, beta positive scalars    hyperparams for the Beta prior over h
+% In addition:
 %   nSims = integer         Number of independent simulations over which
 %                           calculate performance
 % OUTPUT:
 %   perf is a scalar between 0 and 1
+
+% Expand params vector into specific variables:
+SNR=params(1);
+T=params(2);
+h=params(3);
+alpha=params(4);
+beta=params(5);
 
 timePoints=floor(linspace(T,T)); %points for which sims are run
 
@@ -18,7 +27,6 @@ timePoints=floor(linspace(T,T)); %points for which sims are run
 m = 1;                      %half the distance between means of likelihoods
 
 sigma=2*m/SNR;              %sd of likelihoods
-
 
 priorPrec=alpha+beta;
 
