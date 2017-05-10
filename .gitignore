@@ -1,3 +1,4 @@
 MATLAB/tests/*
 *.mat
 ClickTask/MATLAB/tests/*
+PerformanceSims/figures/*
