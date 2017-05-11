@@ -27,7 +27,7 @@ colormap(bone)
 [cmin,cmax]=caxis;
 caxis([.5,cmax]) % set floor color to perf of 50%
 colorbar
-title(['Performance 1000 sims ','h=',num2str(hval),...
+title(['Performance 10000 sims ','h=',num2str(hval),...
     ' alpha=',num2str(alphaval),' beta=',num2str(betaval)])
 xlabel('Interrogation time')
 ylabel('SNR')
