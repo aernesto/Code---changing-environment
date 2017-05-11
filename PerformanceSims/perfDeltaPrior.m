@@ -1,6 +1,16 @@
-function perf = perfDeltaPrior(snr,T,h,nSims)
+function perf = perfDeltaPrior(params,nSims)
 % computes the posterior of an ideal-observer over the state, 
 % for a 2-state changing envt with symmetric rates
+% ARGS: params is a vector with three elements:
+    % snr
+    % T
+    % h
+% OUT: returns a scalar performance between 0 and 1, averaged over nSims
+% simulations
+
+snr = params(1);
+T = params(2);
+h = params(3);
 
 m = 1;                      %half the distance between means of likelihoods
 

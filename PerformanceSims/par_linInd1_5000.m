@@ -1,5 +1,5 @@
 clear
-
+rng('shuffle')
 filename='perfTable.mat';
 load(filename)
 
