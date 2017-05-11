@@ -4,10 +4,10 @@ filename='perfTable.mat';
 load(filename)
 
 params = table2array(perfTable(:,1:5));
-nSims=1000;
+nSims=10000;
 
 tic
-parfor linIdx = 1:500
+parfor linIdx = 1:5000
    perfTable(linIdx,6) =...
        array2table(perfGenPrior(params(linIdx,:),nSims));
 end
