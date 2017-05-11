@@ -12,9 +12,11 @@ nSims=10000;
 perf_filename = 'perfDeltaTable.mat';
 load(perf_filename)
 tic
+var={'perfDelta'};
 parfor linIdx = 1:108800
-   perfDeltaTable(linIdx) =...
-       array2table(perfDeltaPrior(params(linIdx,:),nSims));
+   perfDeltaTable(linIdx,var) =...
+       array2table(perfDeltaPrior(params(linIdx,:),nSims),...
+       'VariableNames',var);
 end
 toc
 
