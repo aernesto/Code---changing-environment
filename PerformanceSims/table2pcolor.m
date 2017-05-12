@@ -1,4 +1,4 @@
-function table2pcolor(filename, frozenVars, values, freeVars, delta)
+function table2pcolor(filename, frozenVars, values, freeVars)
 % Freezes the variables vars from the table represented by filename and
 % plots the performance data as a pcolor plot for the remaining two free
 % dimensions in the table
@@ -32,20 +32,18 @@ if ~(length(freeVars) == 3 &&...
 end
 
 load(filename)
-if delta
-    Table=perfDeltaTable;
-else
-    Table=perfTable;
-end
+% if delta
+%     Table=perfDeltaTable;
+% else
+%     Table=perfTable;
+% end
 
 nVars=length(frozenVars);
 
 % create column for logical indexing of rows
 rowIdx=ones(size(Table,1),1);
-% size(rowIdx)
-% size(Table{:,frozenVars(1)})
 for col=1:nVars
-    rowIdx=rowIdx & Table{:,frozenVars(col)} == values(col);
+    rowIdx=rowIdx & abs(Table{:,frozenVars(col)}-values(col)) < 1e-5;
 end
 
 %conditions on table freeze h, alpha, beta
@@ -53,6 +51,11 @@ perfMatrix=Table{rowIdx,freeVars};
 
 lx=length(unique(Table{:,freeVars(1)}));
 ly=length(unique(Table{:,freeVars(2)}));
+
+% size(perfMatrix)
+% lx
+% ly
+
 x_mat=reshape(perfMatrix(:,1),lx,ly);
 y_mat=reshape(perfMatrix(:,2),lx,ly);
 perf_mat=reshape(perfMatrix(:,3),lx,ly);
