@@ -5,12 +5,14 @@ function perf = perfDeltaPrior(params,nSims)
     % snr
     % T
     % h
+    % ha = h assumed
 % OUT: returns a scalar performance between 0 and 1, averaged over nSims
 % simulations
 
 snr = params(1);
 T = params(2);
 h = params(3);
+ha = params(4);
 
 m = 1;                      %half the distance between means of likelihoods
 
@@ -37,7 +39,7 @@ xm=exp(-(x+m)^2/(2*sigma^2));
 
 %known rate algorithms - first time step
 ld=priorRatio;%first entry used for the true rate
-ld=xp/xm*((1-h)*ld+h)/(h*ld+1-h);
+ld=xp/xm*((1-ha)*ld+ha)/(ha*ld+1-ha);
 
     %pursue the algorithms if the interrogation time is >1     
     %loop over time
@@ -54,7 +56,7 @@ ld=xp/xm*((1-h)*ld+h)/(h*ld+1-h);
         xm = exp(-(x+m)^2/(2*sigma^2));
 
         %update evidence for known rate algorithms
-        ld=xp/xm*((1-h)*ld+h)/(h*ld+1-h);            
+        ld=xp/xm*((1-ha)*ld+ha)/(ha*ld+1-ha);            
     end
 
     %decision variable for known rates
