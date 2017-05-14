@@ -35,7 +35,7 @@ end
 save('perfMatrix_unknown.mat','unknownRatePerfMatrix','-v7.3')
 
 
-assumed_h=.01:.5:1;
+assumed_h=.01:.05:1;
     lah=length(assumed_h);
 
 totalRows=ls*lt*lh*lah;    
