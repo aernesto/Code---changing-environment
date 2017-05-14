@@ -1,4 +1,4 @@
-function table2pcolor(filename, frozenVars, values, freeVars)
+function table2pcolor(Table, frozenVars, values, freeVars)
 % Freezes the variables vars from the table represented by filename and
 % plots the performance data as a pcolor plot for the remaining two free
 % dimensions in the table
@@ -31,7 +31,7 @@ if ~(length(freeVars) == 3 &&...
         '.\nRead CONSTRAINTS on INPUT section of the help'])
 end
 
-load(filename)
+%load(filename)
 % if delta
 %     Table=perfDeltaTable;
 % else
