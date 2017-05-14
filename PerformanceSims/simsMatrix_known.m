@@ -12,7 +12,7 @@ params = knownRatePerfMatrix(:,1:end-1);
 nSims=10000;
 
 tic
-parfor linIdx = 1:1632
+parfor linIdx = 1:16320
    knownRatePerfMatrix(linIdx,5) = perfDeltaPrior(params(linIdx,:),nSims);
 end
 toc
