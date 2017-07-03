@@ -1,7 +1,8 @@
 % Global script administering the simulation
 clear
-% random number generator, randomly choose the seed
+% random number generator, randomly choose the seed 
 rng('shuffle')
+
 
 % global variables
 global rate_low
