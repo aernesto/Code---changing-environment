@@ -2,3 +2,4 @@ MATLAB/tests/*
 *.mat
 ClickTask/MATLAB/tests/*
 PerformanceSims/figures/*
+ClickTask/Python/.ipynb_checkpoints
