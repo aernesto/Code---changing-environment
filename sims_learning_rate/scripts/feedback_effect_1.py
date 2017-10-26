@@ -1,50 +1,27 @@
+import matplotlib.pyplot as plt;
 
-from ipywidgets import interact, interactive, fixed, interact_manual
-import ipywidgets as widgets
-from IPython.display import display
-%matplotlib inline
-import matplotlib.pyplot as plt; plt.rcdefaults()
+plt.rcdefaults()
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import rv_discrete, beta, gamma, norm
-from scipy import stats
+from scipy.stats import rv_discrete, beta
+# from scipy import stats
 import scipy
-#import random
-import sqlite3
+# import random
+# import sqlite3
 import datetime
-import subprocess
+# import subprocess
 # import scipy.stats
-import psycopg2
+# import psycopg2
 import dataset
-
-]:
-db = sqlite3.connect(':memory:')
-
-def init_db(cur):
-    cur.execute('''CREATE TABLE Results (
-        TrialNb UNSIGNED BIG INT,
-        Decision INTEGER,
-        Correct SMALLINT,
-        TimeLastCp MEDIUMINT, 
-        TrialDuration FLOAT)''')
-
-def populate_db(cur, var1, var2, var3, var4, var5):
-    try:
-        cur.execute('''
-            INSERT INTO Results (TrialNb, Decision, Correct, TimeLastCp, TrialDuration)
-            VALUES (?, ?, ?, ?, ?)''', (var1, var2, var3, var4, var5))
-    except:
-        raise
-    else:
-        db.commit()
-
-cur = db.cursor()
-init_db(cur)
-print('database successfully created')
 
 
 class Experiment(object):
-    def __init__(self, setof_stim_noise, exp_dt, setof_trial_dur, setof_h, tot_trial, states=np.array([-1, 1]),
+    '''
+
+    Note: to simulate discrete time equations, easiest way is to set exp_dt = 1
+    '''
+    def __init__(self, setof_stim_noise, exp_dt, setof_trial_dur, setof_h,
+                 tot_trial, states=np.array([-1, 1]),
                  exp_prior=np.array([.5, .5])):
         self.states = states
         self.setof_stim_noise = setof_stim_noise
@@ -57,8 +34,9 @@ class Experiment(object):
 
         # exp_dt = 40 msec corresponds to 25 frames/sec (for stimulus presentation)
         try:
-            if (self.setof_trial_dur % exp_dt) == 0:
-                self.exp_dt = exp_dt  # in msec
+            # check that exp_dt divides all the trial durations
+            if ((self.setof_trial_dur % exp_dt) != 0).sum() == 0:
+                self.exp_dt = exp_dt  # in msec - or in time unit for discrete time
             else:
                 raise AttributeError("Error in arguments: the Experiment's time"
                                      "step size "
@@ -102,41 +80,43 @@ class Experiment(object):
             raw_perf = multiTrialOutputs[0]
             perf_lastcp = multiTrialOutputs[1]
 
-        for trial_idx in range(self.tot_trial):
-            h = self.setof_h  # true hazard rate for current trial
-            duration = self.setof_trial_dur  # trial duration in msec
-            stim_noise = self.setof_stim_noise  # std dev of stimulus generation conditional probability density
-            trial_number = trial_idx
+        # Start exhaustive loop on parameters
+        for h in self.setof_h:
+            for duration in self.setof_trial_dur:
+                for stim_noise in self.setof_stim_noise:
+                    for trial_idx in range(self.tot_trial):
+                        trial_number = trial_idx
 
-            # select initial true environment state for current trial
-            if np.random.uniform() < self.exp_prior[0]:
-                init_state = self.states[0]
-            else:
-                init_state = self.states[1]
+                        # select initial true environment state for current trial
+                        if np.random.uniform() < self.exp_prior[0]:
+                            init_state = self.states[0]
+                        else:
+                            init_state = self.states[1]
 
-            curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
-                                      trial_number, init_state, printEnvt)
-            curr_stim = Stimulus(curr_exp_trial, printStim)
-            curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, observer.dt, self,
-                                      observer.prior_states, observer.prior_h)
-            curr_obs_trial.infer(printLLR)
+                        curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
+                                                  trial_number, init_state, printEnvt)
+                        curr_stim = Stimulus(curr_exp_trial, printStim)
+                        curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, observer.dt, self,
+                                                  observer.prior_states, observer.prior_h)
+                        curr_obs_trial.infer(printLLR)
 
-            # gather variables to store in database
-            if multi:
-                trial_duration = curr_exp_trial.duration / 1000  # in seconds
-                cp = curr_exp_trial.cp_times
-                if cp.size > 0:
-                    time_last_cp = int(round((trial_duration - curr_exp_trial.cp_times[-1]) * 1000))
-                else:
-                    time_last_cp = int(curr_exp_trial.duration)
-                dec = int(curr_obs_trial.decision)
-                #                 print(type(dec))
-                correct = bool(dec == curr_exp_trial.end_state)
-                #                 print(type(correct))
-                #                 print(dec, correct)
-                populate_db(cur, trial_idx, dec, correct, time_last_cp, trial_duration)
+                        # gather variables to store in database
+                        if multi:
+                            trial_duration = curr_exp_trial.duration
+                            cp = curr_exp_trial.cp_times
+                            if cp.size > 0:
+                                time_last_cp = trial_duration - curr_exp_trial.cp_times[-1]
+                            else:
+                                time_last_cp = int(curr_exp_trial.duration)
+                            dec = int(curr_obs_trial.decision)
+                            #                 print(type(dec))
+                            correct = bool(dec == curr_exp_trial.end_state)
+                            #                 print(type(correct))
+                            #                 print(dec, correct)
 
-                #         print(raw_perf)
+                            # WRITE TO DB
+
+                            #         print(raw_perf)
         if raw_perf:
             self.raw_perf()
 
@@ -582,6 +562,9 @@ class ObsTrial(IdealObs):
             plt.show()
 
 
+# SET PARAMETERS
+
+
 print('{}\n\n\
 {:24} {:>7}\n\
 {:24} {:>7}\n\
@@ -597,9 +580,8 @@ print('{}\n\n\
                     'SNR', SNR,
                     'trial duration (msec)', T,
                     'stimulus timestep (msec)', dt,
-                    'nb observations per trial', int(T/dt)+1,
+                    'nb observations per trial', int(T / dt) + 1,
                     'nb of trials to simulate', Trials))
-
 
 np.random.seed()  # not sure this is the correct way to change the seed automatically
 Expt = Experiment(setof_stim_noise=sigma, exp_dt=dt, setof_trial_dur=T, setof_h=h,
