@@ -37,6 +37,8 @@ their integration of the feedback info. One takes it into account,
 the other doesn't.  
 
 For each trial, record:  
+the full path to the script generating the sim 
+the commit number from this file
 the triplet (ntrial, h, SNR)  
 the true (initial-state, end-state) pair  
 the seed to generate the observation train  
