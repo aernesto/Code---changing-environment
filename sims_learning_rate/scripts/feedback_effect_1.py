@@ -1,5 +1,4 @@
-import matplotlib.pyplot as plt;
-
+import matplotlib.pyplot as plt
 plt.rcdefaults()
 import numpy as np
 from scipy.stats import rv_discrete, beta
@@ -127,52 +126,52 @@ class Experiment(object):
             #            curr_obs_trial.save()
             #         self.print_db()
 
-    def raw_perf(self):
-        cursor = cur.execute("SELECT COUNT(Correct) FROM Results WHERE Correct == 1")
-        for row in cursor:
-            print('percent correct = ', (row[0] / self.tot_trial) * 100)
-            print(' ')  # just to have a blank line
+    # def raw_perf(self):
+    #     cursor = cur.execute("SELECT COUNT(Correct) FROM Results WHERE Correct == 1")
+    #     for row in cursor:
+    #         print('percent correct = ', (row[0] / self.tot_trial) * 100)
+    #         print(' ')  # just to have a blank line
 
-    def perf_last_cp(self):
-        #         print('entered the perf_last_cp function')
-        cursor1 = cur.execute('''SELECT TimeLastCp, SUM(Correct)*1.0 / COUNT(TimeLastCp), COUNT(TimeLastCp)
-                                FROM Results 
-                                GROUP BY TimeLastCp
-                                ORDER BY TimeLastCp''')
-        time = np.zeros(0)
-        perf = np.copy(time)
-        counts = np.copy(time)
-        for row in cursor1:
-            time = np.append(time, row[0])
-            perf = np.append(perf, row[1])
-            counts = np.append(counts, row[2])
-        # print(row)
-        plt.figure()
-        plt.ylim([0, counts.max()])
-        plt.bar(time, counts, align='center', width=3)
-        plt.title('Histogram of trial counts per time bin')
-        plt.xlabel('time since last CP (msec)')
-        plt.ylabel('trial count')
-
-        plt.figure()
-        plt.plot(time, perf)
-        plt.title('perf as fcn of time since last CP')
-        plt.xlabel('time since last CP (msec)')
-        plt.ylabel('percent correct')
-        plt.show()
-
-    def print_db(self):
-        print('database content')  # temporary
-        cursor = cur.execute('''SELECT * FROM Results''')
-        for row in cursor:
-            print("Trial nb = ", row[0])
-            print("Decision = ", row[1])
-            print("Correct = ", row[2])
-            print("Time since last cp = ", row[3])
-            print("Trial duration", row[4], "\n")
-
-    def parallel_launch(self):
-        return 0  # temporary
+    # def perf_last_cp(self):
+    #     #         print('entered the perf_last_cp function')
+    #     # cursor1 = cur.execute('''SELECT TimeLastCp, SUM(Correct)*1.0 / COUNT(TimeLastCp), COUNT(TimeLastCp)
+    #                             FROM Results
+    #                             GROUP BY TimeLastCp
+    #                             ORDER BY TimeLastCp''')
+    #     time = np.zeros(0)
+    #     perf = np.copy(time)
+    #     counts = np.copy(time)
+    #     for row in cursor1:
+    #         time = np.append(time, row[0])
+    #         perf = np.append(perf, row[1])
+    #         counts = np.append(counts, row[2])
+    #     # print(row)
+    #     plt.figure()
+    #     plt.ylim([0, counts.max()])
+    #     plt.bar(time, counts, align='center', width=3)
+    #     plt.title('Histogram of trial counts per time bin')
+    #     plt.xlabel('time since last CP (msec)')
+    #     plt.ylabel('trial count')
+    #
+    #     plt.figure()
+    #     plt.plot(time, perf)
+    #     plt.title('perf as fcn of time since last CP')
+    #     plt.xlabel('time since last CP (msec)')
+    #     plt.ylabel('percent correct')
+    #     plt.show()
+    #
+    # # def print_db(self):
+    # #     print('database content')  # temporary
+    # #     cursor = cur.execute('''SELECT * FROM Results''')
+    # #     for row in cursor:
+    # #         print("Trial nb = ", row[0])
+    # #         print("Decision = ", row[1])
+    # #         print("Correct = ", row[2])
+    # #         print("Time since last cp = ", row[3])
+    # #         print("Trial duration", row[4], "\n")
+    #
+    # def parallel_launch(self):
+    #     return 0  # temporary
 
 
 class ExpTrial(object):
@@ -184,7 +183,7 @@ class ExpTrial(object):
         self.stim_noise = stim_noise
         self.trial_number = trial_number
         self.init_state = init_state
-        self.cp_times = self.gen_cp(self.duration, self.true_h, printEnvt)
+        self.cp_times = self.gen_cp_discrete(self.duration, self.true_h)
         self.end_state = self.compute_endstate(self.cp_times.size)
         self.tot_trial = self.expt.tot_trial
 
@@ -214,14 +213,13 @@ class ExpTrial(object):
             print(err.args)
 
     def gen_cp_discrete(self, duration, true_h):
-        for timestep in np.arange(1, duration + 1):
-            if 
-
-
-
-
-
-
+        cp_times = []
+        t = 1  # time step
+        while t <= duration:
+            if np.random.uniform() < true_h:
+                cp_times += [t]
+            t += 1
+        return np.array(cp_times)
 
     '''
     generates poisson train of duration milliseconds with rate true_h in Hz, 
@@ -346,7 +344,7 @@ class Stimulus(object):
             if ncp == 0:  # no change point
                 curr_envt = last_envt
             else:
-                next_cp = 1000 * self.exp_trial.cp_times[next_cp_idx]  # next change point time in msec
+                next_cp = self.exp_trial.cp_times[next_cp_idx]  # next change point time in msec
                 if curr_time < next_cp:  # current bin ends before next cp
                     curr_envt = last_envt
                 else:  # current bin ends after next cp
@@ -381,30 +379,31 @@ class Stimulus(object):
 class IdealObs(object):
     def __init__(self, dt, expt, prior_states=np.array([.5, .5]), prior_h=np.array([1, 1])):
         self.expt = expt  # reference to Experiment object
-        try:
-            if (self.expt.setof_trial_dur % dt) == 0:
-                self.dt = dt  # in msec
-            else:
-                raise AttributeError("Error in arguments: the observer's time"
-                                     "step size "
-                                     "'dt' "
-                                     "does not divide "
-                                     "the trial durations 'setof_trial_dur'")
-        except AttributeError as err:
-            print(err.args)
+        self.dt = dt
+        # try:
+        #     if (self.expt.setof_trial_dur % dt) == 0:
+        #         self.dt = dt  # in msec
+        #     else:
+        #         raise AttributeError("Error in arguments: the observer's time"
+        #                              "step size "
+        #                              "'dt' "
+        #                              "does not divide "
+        #                              "the trial durations 'setof_trial_dur'")
+        # except AttributeError as err:
+        #     print(err.args)
 
         self.prior_h = prior_h
         self.prior_states = prior_states  # TODO: check that prior_states is a stochastic vector
 
-        self.obs_noise = self.expt.setof_stim_noise
+        #self.obs_noise = self.expt.setof_stim_noise
 
     # the following is the likelihood used by the ideal observer
     # H = assumed state of the environment
     # x = point at which to evaluate the pdf
-    def lh(self, H, x):
+    def lh(self, H, x, obs_noise):
         try:
             if H in self.expt.states:
-                return scipy.stats.norm(H, self.obs_noise).pdf(x)
+                return scipy.stats.norm(H, obs_noise).pdf(x)
             else:
                 raise ValueError("Error in argument H: must be an element of "
                                  "Experiment.states")
@@ -451,8 +450,8 @@ class ObsTrial(IdealObs):
 
         # First time step
         # compute joint posterior after first observation: P_{t=0}(H,a=0) --- recall first obs at t=0
-        joint_minus_current[0] = self.lh(Hm, x) * self.prior_states[0]
-        joint_plus_current[0] = self.lh(Hp, x) * self.prior_states[1]
+        joint_minus_current[0] = self.lh(Hm, x, self.obs_noise) * self.prior_states[0]
+        joint_plus_current[0] = self.lh(Hp, x, self.obs_noise) * self.prior_states[1]
 
         #         print(joint_plus_current)
         Fd = joint_plus_current[0] + joint_minus_current[0]
@@ -478,8 +477,8 @@ class ObsTrial(IdealObs):
             x = self.obs[j + 1]
 
             # compute likelihoods
-            xp = self.lh(Hp, x)
-            xm = self.lh(Hm, x)
+            xp = self.lh(Hp, x, self.obs_noise)
+            xm = self.lh(Hm, x, self.obs_noise)
 
             # update the boundaries (with 0 and j changepoints)
             #             print('alpha, priorPrec=',alpha,priorPrec)
@@ -571,29 +570,42 @@ class ObsTrial(IdealObs):
 
 
 # SET PARAMETERS
+hazard_rates = [0.01]
+hstep = 0.05
+hh = hstep
+while hh < 0.51:
+    hazard_rates += [hh]
+    hh += hstep
 
+alpha = 1
+beta = 1
 
-print('{}\n\n\
-{:24} {:>7}\n\
-{:24} {:>7}\n\
-{:24} {:>7}\n\
-{:24} {:>7}\n\
-{:24} {:>7}\n\
-{:24} {:>7}\n\
-{:24} {:>6}\n\
-{:24} {:>7}'.format('To change any of these parameter values, use the sliders above and re-compute each cell',
-                    'true h', h,
-                    'gamma mode', m,
-                    'gamma variance', v,
-                    'SNR', SNR,
-                    'trial duration (msec)', T,
-                    'stimulus timestep (msec)', dt,
-                    'nb observations per trial', int(T / dt) + 1,
-                    'nb of trials to simulate', Trials))
+SNR = []
+stimstdev = []
+snrstep = 0.2
+snr = snrstep
+while snr < 3.01:
+    stdev = 2.0 / snr
+    SNR += [snr]
+    stimstdev += [stdev]
+    snr += snrstep
+
+dt = 1  # for discrete time
+
+trial_durations = [50]
+tdstep = 100
+td = tdstep
+while td < 2001:
+    trial_durations += [td]
+    td += tdstep
+trial_durations = np.array(trial_durations)
+nTrials = 10
+singleTrialOutputs = [True, True, True]
+multiTrialOutputs = [True, True, True]
 
 np.random.seed()  # not sure this is the correct way to change the seed automatically
-Expt = Experiment(setof_stim_noise=sigma, exp_dt=dt, setof_trial_dur=T, setof_h=h,
-                  tot_trial=Trials)
+Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
+                  setof_h=hazard_rates, tot_trial=nTrials)
 Observer = IdealObs(dt=Expt.exp_dt, expt=Expt, prior_h=np.array([alpha, beta]))
 aa = datetime.datetime.now().replace(microsecond=0)
 Expt.launch(Observer, singleTrialOutputs, multiTrialOutputs)
