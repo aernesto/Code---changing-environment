@@ -357,46 +357,91 @@ class ObsTrial(IdealObs):
             plt.title('log posterior odds ratio')
             plt.show()
 
+def printdebug(debugmode, string=None, vartuple=None):
+    '''
+    prints string, varname and var for debug purposes
+    :param debugmode: True or False
+    :param string: Custom message useful for debugging
+    :param vartuple: Tuple (varname, var), where:
+        :varname: string representing name of variable to display
+        :var: actual Python variable to print on screen
+    :return:
+    '''
+    if debugmode:
+        print('-------------------------')
+        if string is None:
+            pass
+        else:
+            print(string)
+        if vartuple is None:
+            pass
+        else:
+            print(vartuple[0], '=', vartuple[1])
+        print('-------------------------')
 
-# SET PARAMETERS
-hazard_rates = [0.01]
-hstep = 0.05
-hh = hstep
-while hh < 0.51:
-    hazard_rates += [hh]
-    hh += hstep
 
-alpha = 1
-beta = 1
+if __name__ == "__main__":
 
-SNR = []
-stimstdev = []
-snrstep = 0.2
-snr = snrstep
-while snr < 3.01:
-    stdev = 2.0 / snr
-    SNR += [snr]
-    stimstdev += [stdev]
-    snr += snrstep
+    # SET PARAMETERS
 
-dt = 1  # for discrete time
+    # Debug mode
+    debug = True
+    printdebug(debugmode=debug,
+               string="debug prints activated")
 
-trial_durations = [50]
-tdstep = 100
-td = tdstep
-while td < 2001:
-    trial_durations += [td]
-    td += tdstep
-trial_durations = np.array(trial_durations)
-nTrials = 10
-singleTrialOutputs = [True, True, True]
-multiTrialOutputs = [True, True, True]
+    # list of hazard rates to use in sim
+    hazard_rates = [0.01]
+    hstep = 0.05
+    hh = hstep
+    while hh < 0.51:
+        hazard_rates += [hh]
+        hh += hstep
+    printdebug(debugmode=debug, vartuple=("hazard_rates", hazard_rates))
+    # hyper-parameters of Beta prior
+    alpha = 1
+    beta = 1
 
-np.random.seed()  # not sure this is the correct way to change the seed automatically
-Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
-                  setof_h=hazard_rates, tot_trial=nTrials)
-Observer = IdealObs(dt=Expt.exp_dt, expt=Expt, prior_h=np.array([alpha, beta]))
-aa = datetime.datetime.now().replace(microsecond=0)
-Expt.launch(Observer, singleTrialOutputs, multiTrialOutputs)
-bb = datetime.datetime.now().replace(microsecond=0)
-print('total elapsed time in hours:min:sec is', bb - aa)
+    # list of SNRs to use in sim
+    SNR = []
+    stimstdev = []
+    snrstep = 0.2
+    snr = snrstep
+    while snr < 3.01:
+        stdev = 2.0 / snr
+        SNR += [snr]
+        stimstdev += [stdev]
+        snr += snrstep
+
+    # time step. Should be one for discrete time
+    dt = 1  # for discrete time
+
+    # numpy array of trial durations to use in sim
+    trial_durations = [50]
+    tdstep = 100
+    td = tdstep
+    while td < 2001:
+        trial_durations += [td]
+        td += tdstep
+    trial_durations = np.array(trial_durations)
+
+    # total number of trials per condition
+    nTrials = 10
+
+    # boolean variables telling script what to plot
+    singleTrialOutputs = [True, True, True]
+    multiTrialOutputs = [True, True, True]
+
+    np.random.seed()  # not sure this is the correct way to change the seed automatically
+    printdebug(debugmode=debug, string="about to create expt object")
+    Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
+                      setof_h=hazard_rates, tot_trial=nTrials)
+    printdebug(debugmode=debug, string="Expt object created")
+    Observer = IdealObs(dt=Expt.exp_dt, expt=Expt, prior_h=np.array([alpha, beta]))
+    printdebug(debugmode=debug, string="Observer object created")
+    aa = datetime.datetime.now().replace(microsecond=0)
+    printdebug(debugmode=debug, string="initial time stored")
+    printdebug(debugmode=True, string="about to execute the launch method")
+    Expt.launch(Observer, singleTrialOutputs, multiTrialOutputs)
+
+    bb = datetime.datetime.now().replace(microsecond=0)
+    print('total elapsed time in hours:min:sec is', bb - aa)
