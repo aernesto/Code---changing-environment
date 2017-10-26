@@ -81,18 +81,6 @@ class Experiment(object):
             print(err.args)
 
     def launch(self, observer, singleTrialOutputs, dbname):
-        # boolean variables telling the script what to plot
-        # plots are produced for a single trial ONLY if the total number of trials is 1
-        # plots are produced for several trials ONLY if the total number of trials is > 1
-        if self.tot_trial == 1:
-            printEnvt = singleTrialOutputs[0]
-            printStim = singleTrialOutputs[1]
-            multi = False
-        else:
-            printEnvt = False
-            printStim = False
-            multi = True
-
         # Start exhaustive loop on parameters
         for h in self.setof_h:
             for duration in self.setof_trial_dur:
@@ -124,7 +112,7 @@ class Experiment(object):
                         curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
                                                   trial_number, init_state, seed=seed)
                         printdebug(debugmode=not debug, string="about to create Stimulus object")
-                        curr_stim = Stimulus(curr_exp_trial, printStim)
+                        curr_stim = Stimulus(curr_exp_trial)
                         printdebug(debugmode=not debug, string="about to create ObsTrial object")
                         curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, observer.dt, self,
                                                   observer.prior_states, observer.prior_h,
@@ -177,7 +165,7 @@ class ExpTrial(object):
 
 
 class Stimulus(object):
-    def __init__(self, exp_trial, printStim):
+    def __init__(self, exp_trial):
         self.exp_trial = exp_trial
         self.trial_number = self.exp_trial.trial_number
 
@@ -190,9 +178,9 @@ class Stimulus(object):
         # at t = 0, t = exp_dt, t = 2 x exp_dt, ... , t = T
         self.nbins = int(self.exp_trial.duration / self.binsize) + 1
 
-        self.stim = self.gen_stim(printStim)
+        self.stim = self.gen_stim()
 
-    def gen_stim(self, printStim):
+    def gen_stim(self):
 
         # stimulus vector to be filled by upcoming while loop
         stimulus = np.zeros(self.nbins)
@@ -273,6 +261,7 @@ class ObsTrial(IdealObs):
         #         self.obs = np.array([0.7, -0.2, -2, 3.6])
         self.obs = self.gen_obs()
         self.dbname = dbname
+        self.marg_gamma = None
 
     def gen_obs(self):
         return self.stimulus.stim
