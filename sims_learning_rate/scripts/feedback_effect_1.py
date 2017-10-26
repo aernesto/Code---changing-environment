@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt;
 
 plt.rcdefaults()
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import rv_discrete, beta
 # from scipy import stats
@@ -214,13 +213,22 @@ class ExpTrial(object):
         except ValueError as err:
             print(err.args)
 
+    def gen_cp_discrete(self, duration, true_h):
+        for timestep in np.arange(1, duration + 1):
+            if 
+
+
+
+
+
+
+
     '''
     generates poisson train of duration milliseconds with rate true_h in Hz, 
     using the Gillespie algorithm.
 
     print statements are only there for debugging purposes
     '''
-
     def gen_cp(self, duration, true_h, printEnvt):
         # TODO: Generate a warning if >1 ch-pt occur in Experiment.exp_dt window
         # print('launching gen_cp')
