@@ -1,15 +1,14 @@
 import matplotlib.pyplot as plt
-plt.rcdefaults()
 import numpy as np
-from scipy.stats import rv_discrete, beta
+from scipy.stats import rv_discrete
 import scipy
-import sqlite3
 import datetime
 import dataset
-
+plt.rcdefaults()
 
 # Debug mode
 debug = True
+
 
 def printdebug(debugmode, string=None, vartuple=None):
     '''
@@ -32,6 +31,7 @@ def printdebug(debugmode, string=None, vartuple=None):
         else:
             print(vartuple[0], '=', vartuple[1])
         print('-------------------------')
+
 
 class Experiment(object):
     '''
@@ -86,17 +86,11 @@ class Experiment(object):
         if self.tot_trial == 1:
             printEnvt = singleTrialOutputs[0]
             printStim = singleTrialOutputs[1]
-            printLLR = singleTrialOutputs[2]
             multi = False
-            raw_perf = False
-            perf_lastcp = False
         else:
             printEnvt = False
             printStim = False
-            printLLR = False
             multi = True
-            raw_perf = multiTrialOutputs[0]
-            perf_lastcp = multiTrialOutputs[1]
 
         # Start exhaustive loop on parameters
         for h in self.setof_h:
@@ -124,31 +118,23 @@ class Experiment(object):
                         else:
                             init_state = self.states[1]
                         printdebug(debugmode=not debug, string="about to create ExpTrial object")
+                        np.random.seed(None)
+                        seed = np.random.get_state()
                         curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
-                                                  trial_number, init_state, printEnvt)
+                                                  trial_number, init_state, seed=seed)
                         printdebug(debugmode=not debug, string="about to create Stimulus object")
                         curr_stim = Stimulus(curr_exp_trial, printStim)
                         printdebug(debugmode=not debug, string="about to create ObsTrial object")
                         curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, observer.dt, self,
-                                                  observer.prior_states, observer.prior_h)
+                                                  observer.prior_states, observer.prior_h,
+                                                  dbname="test_1.db")
                         printdebug(debugmode=not debug, string="about to launch infer method")
-                        curr_obs_trial.infer(printLLR)
-
-                        # gather variables to store in database
-                        if multi:
-                            trial_duration = curr_exp_trial.duration
-                            cp = curr_exp_trial.cp_times
-                            if cp.size > 0:
-                                time_last_cp = trial_duration - curr_exp_trial.cp_times[-1]
-                            else:
-                                time_last_cp = int(curr_exp_trial.duration)
-                            dec = int(curr_obs_trial.decision)
-                            correct = bool(dec == curr_exp_trial.end_state)
+                        curr_obs_trial.infer(save2db=True)
 
 
 class ExpTrial(object):
     def __init__(self, expt, h, duration, stim_noise, trial_number,
-                 init_state, printEnvt):
+                 init_state, seed):
         self.expt = expt
         self.true_h = h
         self.duration = duration  # msec
@@ -158,6 +144,7 @@ class ExpTrial(object):
         self.cp_times = self.gen_cp_discrete(self.duration, self.true_h)
         self.end_state = self.compute_endstate(self.cp_times.size)
         self.tot_trial = self.expt.tot_trial
+        self.seed = seed
 
     def compute_endstate(self, ncp):
         # the fact that the last state equals the initial state depends on
@@ -247,13 +234,10 @@ class Stimulus(object):
 
         # plot stimulus trace
         if printStim:
-            #             plt.figure()
             plt.plot(np.arange(self.nbins), stimulus, 'o')
             plt.title('stimulus / observations')
             plt.show()
 
-        # print('stimulus created')
-        #         print(stimulus)
         return stimulus
 
 
@@ -279,7 +263,10 @@ class IdealObs(object):
 
 
 class ObsTrial(IdealObs):
-    def __init__(self, exp_trial, stimulus, dt, expt, prior_states=np.array([.5, .5]), prior_h=np.array([1, 1])):
+    def __init__(self, exp_trial, stimulus, dt, expt,
+                 prior_states=np.array([.5, .5]),
+                 prior_h=np.array([1, 1]),
+                 dbname=None):
         super().__init__(dt, expt, prior_states, prior_h)
         self.exp_trial = exp_trial
         self.stimulus = stimulus
@@ -290,11 +277,12 @@ class ObsTrial(IdealObs):
         # artificial observations for testing purposes
         #         self.obs = np.array([0.7, -0.2, -2, 3.6])
         self.obs = self.gen_obs()
+        self.dbname = dbname
 
     def gen_obs(self):
         return self.stimulus.stim
 
-    def infer(self, printLLR):
+    def infer(self, save2db):
         #  initialize variables
         Hp = self.expt.states[1]
         Hm = self.expt.states[0]
@@ -351,7 +339,7 @@ class ObsTrial(IdealObs):
 
             # update the interior values
             if j > 0:
-                vk = np.arange(2, j + 2);
+                vk = np.arange(2, j + 2)
                 #                 print('vk',vk)
                 ep = 1 - (vk - 1 + alpha) / (j + priorPrec)  # no change
                 em = (vk - 2 + alpha) / (j + priorPrec)  # change
@@ -368,51 +356,37 @@ class ObsTrial(IdealObs):
             Pp[:, j + 1] = joint_plus_current.copy()
             Pm[:, j + 1] = joint_minus_current.copy()
 
-            # compute marginals over state if last iteration
-            lp = joint_plus_current.sum()
-            lm = joint_minus_current.sum()
-            self.llr[j + 1] = np.log(lp / lm)
+        # compute marginals over change point count if last iteration
+        self.marg_gamma = joint_plus_current + joint_minus_current
 
-        # compute decision (interrogate the system)
-        if np.sign(np.log(lp / lm)) == -1:
-            self.decision = Hm
-        elif np.sign(np.log(lp / lm)) == 1:
-            self.decision = Hp
-        else:
-            if np.random.uniform() < 0.5:
-                self.decision = Hm
-            else:
-                self.decision = Hp
+        if save2db:
+            self.save2db(dbname=self.dbname, seed=self.exp_trial.seed)
 
-        # plot log posterior odds ratio trace
-        if printLLR:
-            #             plt.figure()
-            plt.plot(np.arange(self.stimulus.nbins), self.llr, 'r-')
-            plt.axhline(0, color='black')
-            plt.title('log posterior odds ratio')
-            plt.show()
+    def save2db(self, dbname, seed):
+        dict2save = dict()
+        dict2save['commit'] = '21b7d9a5c6136b2c5757599cd0025ffd2924a28b'
+        dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
+        dict2save['discrete-time'] = True
+        dict2save['trial-number'] = self.exp_trial.trial_number
+        dict2save['trial-duration'] = self.exp_trial.duration
+        dict2save['seed'] = seed
+        dict2save['initial-state'] = self.exp_trial.init_state
+        dict2save['end-state'] = self.exp_trial.end_state
+        dict2save['alpha'] = self.prior_h[0]
+        dict2save['beta'] = self.prior_h[1]
+        # compute and store time since last change point
+        if self.exp_trial.cp_times.size > 0:
+            time_last_cp = self.exp_trial.duration - self.exp_trial.cp_times[-1]
+        else:
+            time_last_cp = self.exp_trial.duration
+        dict2save['time-last-cp'] = time_last_cp
+        # dict2save['marginal-gamma'] = self.marg_gamma
+        # dict2save['post-var-h'] =
+        # dict2save['post-mean-h'] =
 
-def printdebug(debugmode, string=None, vartuple=None):
-    '''
-    prints string, varname and var for debug purposes
-    :param debugmode: True or False
-    :param string: Custom message useful for debugging
-    :param vartuple: Tuple (varname, var), where:
-        :varname: string representing name of variable to display
-        :var: actual Python variable to print on screen
-    :return:
-    '''
-    if debugmode:
-        print('-------------------------')
-        if string is None:
-            pass
-        else:
-            print(string)
-        if vartuple is None:
-            pass
-        else:
-            print(vartuple[0], '=', vartuple[1])
-        print('-------------------------')
+        db = dataset.connect('sqlite:///' + dbname)
+        table = db['feedback']
+        table.insert(dict2save)
 
 
 if __name__ == "__main__":
@@ -462,7 +436,6 @@ if __name__ == "__main__":
     singleTrialOutputs = [True, True, True]
     multiTrialOutputs = [True, True]
 
-    np.random.seed()  # not sure this is the correct way to change the seed automatically
     printdebug(debugmode= not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
                       setof_h=hazard_rates, tot_trial=nTrials)
@@ -476,3 +449,4 @@ if __name__ == "__main__":
 
     bb = datetime.datetime.now().replace(microsecond=0)
     print('total elapsed time in hours:min:sec is', bb - aa)
+    
