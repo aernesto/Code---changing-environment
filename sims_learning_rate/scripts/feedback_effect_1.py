@@ -8,6 +8,31 @@ import datetime
 import dataset
 
 
+# Debug mode
+debug = True
+
+def printdebug(debugmode, string=None, vartuple=None):
+    '''
+    prints string, varname and var for debug purposes
+    :param debugmode: True or False
+    :param string: Custom message useful for debugging
+    :param vartuple: Tuple (varname, var), where:
+        :varname: string representing name of variable to display
+        :var: actual Python variable to print on screen
+    :return:
+    '''
+    if debugmode:
+        print('-------------------------')
+        if string is None:
+            pass
+        else:
+            print(string)
+        if vartuple is None:
+            pass
+        else:
+            print(vartuple[0], '=', vartuple[1])
+        print('-------------------------')
+
 class Experiment(object):
     '''
 
@@ -78,6 +103,19 @@ class Experiment(object):
             for duration in self.setof_trial_dur:
                 for stim_noise in self.setof_stim_noise:
                     for trial_idx in range(self.tot_trial):
+                        printdebug(debugmode=not debug,
+                                   string="inside nested for loops",
+                                   vartuple=("h",
+                                             h))
+                        printdebug(debugmode=not debug,
+                                   vartuple=("duration",
+                                             duration))
+                        printdebug(debugmode=not debug,
+                                   vartuple=("stim_noise",
+                                             stim_noise))
+                        printdebug(debugmode=not debug,
+                                   vartuple=("trial_idx",
+                                             trial_idx))
                         trial_number = trial_idx
 
                         # select initial true environment state for current trial
@@ -85,12 +123,15 @@ class Experiment(object):
                             init_state = self.states[0]
                         else:
                             init_state = self.states[1]
-
+                        printdebug(debugmode=not debug, string="about to create ExpTrial object")
                         curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
                                                   trial_number, init_state, printEnvt)
+                        printdebug(debugmode=not debug, string="about to create Stimulus object")
                         curr_stim = Stimulus(curr_exp_trial, printStim)
+                        printdebug(debugmode=not debug, string="about to create ObsTrial object")
                         curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, observer.dt, self,
                                                   observer.prior_states, observer.prior_h)
+                        printdebug(debugmode=not debug, string="about to launch infer method")
                         curr_obs_trial.infer(printLLR)
 
                         # gather variables to store in database
@@ -103,12 +144,6 @@ class Experiment(object):
                                 time_last_cp = int(curr_exp_trial.duration)
                             dec = int(curr_obs_trial.decision)
                             correct = bool(dec == curr_exp_trial.end_state)
-        if raw_perf:
-            self.raw_perf()
-
-        # print(perf_lastcp)
-        if perf_lastcp:
-            self.perf_last_cp()
 
 
 class ExpTrial(object):
@@ -383,12 +418,8 @@ def printdebug(debugmode, string=None, vartuple=None):
 if __name__ == "__main__":
 
     # SET PARAMETERS
-
-    # Debug mode
-    debug = True
     printdebug(debugmode=debug,
                string="debug prints activated")
-
     # list of hazard rates to use in sim
     hazard_rates = [0.01]
     hstep = 0.05
@@ -396,7 +427,7 @@ if __name__ == "__main__":
     while hh < 0.51:
         hazard_rates += [hh]
         hh += hstep
-    printdebug(debugmode=debug, vartuple=("hazard_rates", hazard_rates))
+    printdebug(debugmode=not debug, vartuple=("hazard_rates", hazard_rates))
     # hyper-parameters of Beta prior
     alpha = 1
     beta = 1
@@ -429,17 +460,17 @@ if __name__ == "__main__":
 
     # boolean variables telling script what to plot
     singleTrialOutputs = [True, True, True]
-    multiTrialOutputs = [True, True, True]
+    multiTrialOutputs = [True, True]
 
     np.random.seed()  # not sure this is the correct way to change the seed automatically
-    printdebug(debugmode=debug, string="about to create expt object")
+    printdebug(debugmode= not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
                       setof_h=hazard_rates, tot_trial=nTrials)
-    printdebug(debugmode=debug, string="Expt object created")
+    printdebug(debugmode=not debug, string="Expt object created")
     Observer = IdealObs(dt=Expt.exp_dt, expt=Expt, prior_h=np.array([alpha, beta]))
-    printdebug(debugmode=debug, string="Observer object created")
+    printdebug(debugmode=not debug, string="Observer object created")
     aa = datetime.datetime.now().replace(microsecond=0)
-    printdebug(debugmode=debug, string="initial time stored")
+    printdebug(debugmode=not debug, string="initial time stored")
     printdebug(debugmode=True, string="about to execute the launch method")
     Expt.launch(Observer, singleTrialOutputs, multiTrialOutputs)
 
