@@ -5,6 +5,7 @@ import scipy
 import datetime
 import dataset
 import pickle
+
 plt.rcdefaults()
 
 # Debug mode
@@ -48,6 +49,7 @@ class Experiment(object):
     """
     Note: to simulate discrete time equations, easiest way is to set exp_dt = 1
     """
+
     def __init__(self, setof_stim_noise, exp_dt, setof_trial_dur, setof_h,
                  tot_trial, states=np.array([-1, 1]),
                  exp_prior=np.array([.5, .5])):
@@ -259,6 +261,7 @@ class ObsTrial(IdealObs):
         self.obs = self.gen_obs()
         self.dbname = dbname
         self.marg_gamma = None
+        self.marg_gamma_feedback = None
 
     def gen_obs(self):
         return self.stimulus.stim
@@ -288,6 +291,7 @@ class ObsTrial(IdealObs):
         # pursue algorithm if interrogation time is greater than 0
         if self.exp_trial.duration == 0:
             print('trial has duration 0 msec')
+            exit(1)
             # todo: find a way to exit the function
 
         for j in np.arange(self.stimulus.nbins - 1):
@@ -309,7 +313,6 @@ class ObsTrial(IdealObs):
             # update the interior values
             if j > 0:
                 vk = np.arange(2, j + 2)
-                #                 print('vk',vk)
                 ep = 1 - (vk - 1 + alpha) / (j + priorprec)  # no change
                 em = (vk - 2 + alpha) / (j + priorprec)  # change
 
@@ -320,11 +323,61 @@ class ObsTrial(IdealObs):
 
             # sum probabilities in order to normalize
             normcoef = joint_plus_new.sum() + joint_minus_new.sum()
+
+            # if last iteration of the for loop, special computation for feedback observer
+            if j == self.stimulus.nbins - 2:
+                jpn = joint_plus_new.copy()
+                jmn = joint_minus_new.copy()
+                if self.exp_trial.end_state == envm:  # feedback is H-
+                    # update the boundaries (with 0 and j change points)
+                    ea = 1 - alpha / (j + priorprec)
+                    eb = (j + alpha) / (j + priorprec)
+                    jpn[0] = 0
+                    jmn[0] = xm * ea * joint_minus_current[0]
+                    jpn[j + 1] = 0
+                    jmn[j + 1] = xm * eb * joint_plus_current[j]
+
+                    # update the interior values
+                    if j > 0:
+                        vk = np.arange(2, j + 2)
+                        ep = 1 - (vk - 1 + alpha) / (j + priorprec)  # no change
+                        em = (vk - 2 + alpha) / (j + priorprec)  # change
+
+                        jpn[vk - 1] = 0
+                        jmn[vk - 1] = xm * (np.multiply(ep, joint_minus_current[vk - 1]) +
+                                            np.multiply(em, joint_plus_current[vk - 2]))
+
+                    joint_plus_feedback = jpn.copy()
+                    joint_minus_feedback = jmn / jmn.sum()
+
+                else:
+                    # update the boundaries (with 0 and j change points)
+                    ea = 1 - alpha / (j + priorprec)
+                    eb = (j + alpha) / (j + priorprec)
+                    jpn[0] = xp * ea * joint_plus_current[0]
+                    jmn[0] = 0
+                    jpn[j + 1] = xp * eb * joint_minus_current[j]
+                    jmn[j + 1] = 0
+
+                    # update the interior values
+                    if j > 0:
+                        vk = np.arange(2, j + 2)
+                        ep = 1 - (vk - 1 + alpha) / (j + priorprec)  # no change
+                        em = (vk - 2 + alpha) / (j + priorprec)  # change
+
+                        jpn[vk - 1] = xp * (np.multiply(ep, joint_plus_current[vk - 1]) +
+                                            np.multiply(em, joint_minus_current[vk - 2]))
+                        jmn[vk - 1] = 0
+
+                    joint_minus_feedback = jmn.copy()
+                    joint_plus_feedback = jpn / jpn.sum()
+
             joint_plus_current = joint_plus_new / normcoef
             joint_minus_current = joint_minus_new / normcoef
 
         # compute marginals over change point count if last iteration
         self.marg_gamma = joint_plus_current + joint_minus_current
+        self.marg_gamma_feedback = joint_plus_feedback + joint_minus_feedback
 
         if save2db:
             self.save2db(seed=self.exp_trial.seed)
@@ -343,12 +396,33 @@ class ObsTrial(IdealObs):
         dict2save['endState'] = self.exp_trial.end_state
         dict2save['alpha'] = self.prior_h[0]
         dict2save['beta'] = self.prior_h[1]
+
         # compute and store time since last change point
         if self.exp_trial.cp_times.size > 0:
             time_last_cp = self.exp_trial.duration - self.exp_trial.cp_times[-1]
         else:
             time_last_cp = self.exp_trial.duration
         dict2save['timeLastCp'] = time_last_cp
+
+        # compute and store mean and stdev of marginals over CP counts
+        mean_gamma, stdev_gamma = (np.mean(self.marg_gamma), np.std(self.marg_gamma))
+        mean_gamma_feedback = np.mean(self.marg_gamma_feedback)
+        stdev_gamma_feedback = np.std(self.marg_gamma_feedback)
+
+        dict_feedback = dict2save
+
+        dict2save['feedback'] = False
+        dict_feedback['feedback'] = True
+        dict2save['meanGamma'] = mean_gamma
+        dict_feedback['meanGamma'] = mean_gamma_feedback
+        dict2save['stdevGamma'] = stdev_gamma
+        dict_feedback['stdevGamma'] = stdev_gamma_feedback
+
+        # save both dicts to SQLite db
+        db = dataset.connect('sqlite:///' + dbname + '.db')
+        table = db['feedback']
+        table.insert(dict2save)
+        table.insert(dict_feedback)
 
         # write heavy data to file
         heavydict = dict()
@@ -360,10 +434,6 @@ class ObsTrial(IdealObs):
         with open(filename, 'wb') as handle:
             pickle.dump(heavydict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        db = dataset.connect('sqlite:///' + dbname + '.db')
-        table = db['feedback']
-        table.insert(dict2save)
-
 
 if __name__ == "__main__":
 
@@ -374,7 +444,7 @@ if __name__ == "__main__":
     hazard_rates = [0.01]
     hstep = 0.05
     hh = hstep
-    while hh < 0.51:
+    while hh < 0.06:  # true value is 0.51
         hazard_rates += [hh]
         hh += hstep
     printdebug(debugmode=not debug, vartuple=("hazard_rates", hazard_rates))
@@ -387,7 +457,7 @@ if __name__ == "__main__":
     stimstdev = []
     snrstep = 0.2
     snr = snrstep
-    while snr < 3.01:
+    while snr < 0.41:  # true value is 3.01
         stdev = 2.0 / snr
         SNR += [snr]
         stimstdev += [stdev]
@@ -400,7 +470,7 @@ if __name__ == "__main__":
     trial_durations = [50]
     tdstep = 100
     td = tdstep
-    while td < 2001:
+    while td < 101:  # true value is 2001
         trial_durations += [td]
         td += tdstep
     trial_durations = np.array(trial_durations)
@@ -413,7 +483,7 @@ if __name__ == "__main__":
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'test_3'
+    dbname = 'test_4'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
