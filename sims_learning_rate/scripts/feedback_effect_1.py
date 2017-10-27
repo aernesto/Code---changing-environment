@@ -12,7 +12,7 @@ debug = True
 
 
 def printdebug(debugmode, string=None, vartuple=None):
-    '''
+    """
     prints string, varname and var for debug purposes
     :param debugmode: True or False
     :param string: Custom message useful for debugging
@@ -20,7 +20,7 @@ def printdebug(debugmode, string=None, vartuple=None):
         :varname: string representing name of variable to display
         :var: actual Python variable to print on screen
     :return:
-    '''
+    """
     if debugmode:
         print('-------------------------')
         if string is None:
@@ -34,11 +34,20 @@ def printdebug(debugmode, string=None, vartuple=None):
         print('-------------------------')
 
 
-class Experiment(object):
-    '''
+def gen_cp_discrete(duration, true_h):
+    cp_times = []
+    t = 1  # time step
+    while t <= duration:
+        if np.random.uniform() < true_h:
+            cp_times += [t]
+        t += 1
+    return np.array(cp_times)
 
+
+class Experiment(object):
+    """
     Note: to simulate discrete time equations, easiest way is to set exp_dt = 1
-    '''
+    """
     def __init__(self, setof_stim_noise, exp_dt, setof_trial_dur, setof_h,
                  tot_trial, states=np.array([-1, 1]),
                  exp_prior=np.array([.5, .5])):
@@ -66,11 +75,11 @@ class Experiment(object):
             print(err.args)
 
     # function that switches the environment state that is given as argument
-    def switch(self, H):
+    def switch(self, envstate):
         try:
             # might be more elegant to use elseif syntax below
-            if H in self.states:
-                if H == self.states[0]:
+            if envstate in self.states:
+                if envstate == self.states[0]:
                     return self.states[1]
                 else:
                     return self.states[0]
@@ -80,7 +89,7 @@ class Experiment(object):
         except AttributeError as err:
             print(err.args)
 
-    def launch(self, observer, singleTrialOutputs, dbname):
+    def launch(self, observer):
         # Start exhaustive loop on parameters
         for h in self.setof_h:
             for duration in self.setof_trial_dur:
@@ -114,9 +123,8 @@ class Experiment(object):
                         printdebug(debugmode=not debug, string="about to create Stimulus object")
                         curr_stim = Stimulus(curr_exp_trial)
                         printdebug(debugmode=not debug, string="about to create ObsTrial object")
-                        curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, observer.dt, self,
-                                                  observer.prior_states, observer.prior_h,
-                                                  dbname=dbname)
+                        curr_obs_trial = ObsTrial(curr_exp_trial, curr_stim, self,
+                                                  observer.prior_states, observer.prior_h)
                         printdebug(debugmode=not debug, string="about to launch infer method")
                         curr_obs_trial.infer(save2db=True)
 
@@ -130,7 +138,7 @@ class ExpTrial(object):
         self.stim_noise = stim_noise
         self.trial_number = trial_number
         self.init_state = init_state
-        self.cp_times = self.gen_cp_discrete(self.duration, self.true_h)
+        self.cp_times = gen_cp_discrete(self.duration, self.true_h)
         self.end_state = self.compute_endstate(self.cp_times.size)
         self.tot_trial = self.expt.tot_trial
         self.seed = seed
@@ -143,25 +151,16 @@ class ExpTrial(object):
         else:
             return self.expt.switch(self.init_state)
 
-    def randlh(self, H):
+    def randlh(self, envstate):
         # try clause might be redundant (because switch method does it)
         try:
-            if H in self.expt.states:
-                return np.random.normal(H, self.stim_noise)
+            if envstate in self.expt.states:
+                return np.random.normal(envstate, self.stim_noise)
             else:
                 raise ValueError("Error in argument H: must be an element of "
                                  "Experiment.states")
         except ValueError as err:
             print(err.args)
-
-    def gen_cp_discrete(self, duration, true_h):
-        cp_times = []
-        t = 1  # time step
-        while t <= duration:
-            if np.random.uniform() < true_h:
-                cp_times += [t]
-            t += 1
-        return np.array(cp_times)
 
 
 class Stimulus(object):
@@ -188,7 +187,6 @@ class Stimulus(object):
         ncp = self.exp_trial.cp_times.size  # number of change points
 
         # loop variables
-        bin_nb = 0  # we start counting bins from 0
         last_envt = self.exp_trial.init_state
         next_cp_idx = 0
         non_passed = True
@@ -225,7 +223,7 @@ class Stimulus(object):
 
 
 class IdealObs(object):
-    def __init__(self, dt, expt, prior_states=np.array([.5, .5]), prior_h=np.array([1, 1])):
+    def __init__(self, expt, prior_states=np.array([.5, .5]), prior_h=np.array([1, 1])):
         self.expt = expt  # reference to Experiment object
         self.dt = dt
         self.prior_h = prior_h
@@ -234,10 +232,10 @@ class IdealObs(object):
     # the following is the likelihood used by the ideal observer
     # H = assumed state of the environment
     # x = point at which to evaluate the pdf
-    def lh(self, H, x, obs_noise):
+    def lh(self, envstate, x, obs_noise):
         try:
-            if H in self.expt.states:
-                return scipy.stats.norm(H, obs_noise).pdf(x)
+            if envstate in self.expt.states:
+                return scipy.stats.norm(envstate, obs_noise).pdf(x)
             else:
                 raise ValueError("Error in argument H: must be an element of "
                                  "Experiment.states")
@@ -246,11 +244,10 @@ class IdealObs(object):
 
 
 class ObsTrial(IdealObs):
-    def __init__(self, exp_trial, stimulus, dt, expt,
+    def __init__(self, exp_trial, stimulus, expt,
                  prior_states=np.array([.5, .5]),
-                 prior_h=np.array([1, 1]),
-                 dbname=None):
-        super().__init__(dt, expt, prior_states, prior_h)
+                 prior_h=np.array([1, 1])):
+        super().__init__(expt, prior_states, prior_h)
         self.exp_trial = exp_trial
         self.stimulus = stimulus
         self.llr = np.zeros(self.stimulus.nbins)
@@ -268,37 +265,25 @@ class ObsTrial(IdealObs):
 
     def infer(self, save2db):
         #  initialize variables
-        Hp = self.expt.states[1]
-        Hm = self.expt.states[0]
+        envp = self.expt.states[1]
+        envm = self.expt.states[0]
         joint_plus_new = np.zeros(self.stimulus.nbins)
         joint_plus_current = np.copy(joint_plus_new)
         joint_minus_new = np.copy(joint_plus_new)
         joint_minus_current = np.copy(joint_plus_new)
-        alpha = self.prior_h[0]
-        priorPrec = self.prior_h.sum()
-        Pp = np.zeros([self.stimulus.nbins, self.stimulus.nbins])
-        Pm = np.copy(Pp)
+        priorprec = self.prior_h.sum()
 
         # get first observation
         x = self.obs[0]
 
         # First time step
         # compute joint posterior after first observation: P_{t=0}(H,a=0) --- recall first obs at t=0
-        joint_minus_current[0] = self.lh(Hm, x, self.obs_noise) * self.prior_states[0]
-        joint_plus_current[0] = self.lh(Hp, x, self.obs_noise) * self.prior_states[1]
+        joint_minus_current[0] = self.lh(envm, x, self.obs_noise) * self.prior_states[0]
+        joint_plus_current[0] = self.lh(envp, x, self.obs_noise) * self.prior_states[1]
 
-        #         print(joint_plus_current)
-        Fd = joint_plus_current[0] + joint_minus_current[0]
-        joint_plus_current[0] = joint_plus_current[0] / Fd
-        #         print(joint_plus_current[0])
-        joint_minus_current[0] = joint_minus_current[0] / Fd
-
-        # compute marginals over state
-        lp = joint_plus_current[0]
-        lm = joint_minus_current[0]
-        self.llr[0] = np.log(lp / lm)  # log posterior odds ratio
-        Pp[:, 0] = joint_plus_current.copy()
-        Pm[:, 0] = joint_minus_current.copy()
+        normcoef = joint_plus_current[0] + joint_minus_current[0]
+        joint_plus_current[0] = joint_plus_current[0] / normcoef
+        joint_minus_current[0] = joint_minus_current[0] / normcoef
 
         # pursue algorithm if interrogation time is greater than 0
         if self.exp_trial.duration == 0:
@@ -310,12 +295,12 @@ class ObsTrial(IdealObs):
             x = self.obs[j + 1]
 
             # compute likelihoods
-            xp = self.lh(Hp, x, self.obs_noise)
-            xm = self.lh(Hm, x, self.obs_noise)
+            xp = self.lh(envp, x, self.obs_noise)
+            xm = self.lh(envm, x, self.obs_noise)
 
-            # update the boundaries (with 0 and j changepoints)
-            ea = 1 - alpha / (j + priorPrec)
-            eb = (j + alpha) / (j + priorPrec)
+            # update the boundaries (with 0 and j change points)
+            ea = 1 - alpha / (j + priorprec)
+            eb = (j + alpha) / (j + priorprec)
             joint_plus_new[0] = xp * ea * joint_plus_current[0]
             joint_minus_new[0] = xm * ea * joint_minus_current[0]
             joint_plus_new[j + 1] = xp * eb * joint_minus_current[j]
@@ -325,8 +310,8 @@ class ObsTrial(IdealObs):
             if j > 0:
                 vk = np.arange(2, j + 2)
                 #                 print('vk',vk)
-                ep = 1 - (vk - 1 + alpha) / (j + priorPrec)  # no change
-                em = (vk - 2 + alpha) / (j + priorPrec)  # change
+                ep = 1 - (vk - 1 + alpha) / (j + priorprec)  # no change
+                em = (vk - 2 + alpha) / (j + priorprec)  # change
 
                 joint_plus_new[vk - 1] = xp * (np.multiply(ep, joint_plus_current[vk - 1]) +
                                                np.multiply(em, joint_minus_current[vk - 2]))
@@ -334,19 +319,17 @@ class ObsTrial(IdealObs):
                                                 np.multiply(em, joint_plus_current[vk - 2]))
 
             # sum probabilities in order to normalize
-            Hs = joint_plus_new.sum() + joint_minus_new.sum()
-            joint_plus_current = joint_plus_new / Hs
-            joint_minus_current = joint_minus_new / Hs
-            Pp[:, j + 1] = joint_plus_current.copy()
-            Pm[:, j + 1] = joint_minus_current.copy()
+            normcoef = joint_plus_new.sum() + joint_minus_new.sum()
+            joint_plus_current = joint_plus_new / normcoef
+            joint_minus_current = joint_minus_new / normcoef
 
         # compute marginals over change point count if last iteration
         self.marg_gamma = joint_plus_current + joint_minus_current
 
         if save2db:
-            self.save2db(dbname=self.dbname, seed=self.exp_trial.seed)
+            self.save2db(seed=self.exp_trial.seed)
 
-    def save2db(self, dbname, seed):
+    def save2db(self, seed):
         dict2save = dict()
         dict2save['commit'] = '21b7d9a5c6136b2c5757599cd0025ffd2924a28b'
         dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
@@ -436,12 +419,12 @@ if __name__ == "__main__":
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
                       setof_h=hazard_rates, tot_trial=nTrials)
     printdebug(debugmode=not debug, string="Expt object created")
-    Observer = IdealObs(dt=Expt.exp_dt, expt=Expt, prior_h=np.array([alpha, beta]))
+    Observer = IdealObs(expt=Expt, prior_h=np.array([alpha, beta]))
     printdebug(debugmode=not debug, string="Observer object created")
     aa = datetime.datetime.now().replace(microsecond=0)
     printdebug(debugmode=not debug, string="initial time stored")
     printdebug(debugmode=True, string="about to execute the launch method")
-    Expt.launch(Observer, singleTrialOutputs, dbname)
+    Expt.launch(Observer)
 
     bb = datetime.datetime.now().replace(microsecond=0)
     print('total elapsed time in hours:min:sec is', bb - aa)
