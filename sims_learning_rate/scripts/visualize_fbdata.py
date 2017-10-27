@@ -306,12 +306,12 @@ def plots1d(array, fixed_vars, lastfigure):
     lastfigure += 1
     plt.figure(lastfigure)
     plt.errorbar(indepvar, means, yerr=err_means)
-    plt.title("avg abs diff in means as fcn of " + indepvarname)
+    plt.title("avg diff in means as fcn of " + indepvarname)
     plt.xlabel(indepvarname)
     lastfigure += 1
     plt.figure(lastfigure)
     plt.errorbar(indepvar, stdevs, yerr=err_stdevs)
-    plt.title("avg abs diff in var as fcn of " + indepvarname)
+    plt.title("avg diff in var as fcn of " + indepvarname)
     plt.xlabel(indepvarname)
     plt.show()
 
@@ -321,6 +321,6 @@ if __name__ == "__main__":
     # list_fields()
     # list_unique(['meandiff', 'absmeandiff'], limit=10)
     # list_triplets()
-    simdata = analyze_diff(typediff='abs')
+    simdata = analyze_diff(typediff='new')
     # plot_hist_cv(simdata, fignum)
-    plots1d(simdata, {'hazardRate': 0.1, 'SNR': 1.0}, fignum)
+    plots1d(simdata, {'trialDuration': 50, 'SNR': 0.2}, fignum)
