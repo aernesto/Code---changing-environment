@@ -94,10 +94,15 @@ class Experiment(object):
 
     def launch(self, observer):
         # Start exhaustive loop on parameters
+        global_nb = 1  # counter for output to the user via console
         for h in self.setof_h:
             for duration in self.setof_trial_dur:
                 for stim_noise in self.setof_stim_noise:
                     for trial_idx in range(self.tot_trial):
+                        if global_nb % 1000 == 0:
+                            printdebug(debugmode=debug, string="entering trial",
+                                       vartuple=('', global_nb))
+                        global_nb += 1
                         printdebug(debugmode=not debug,
                                    string="inside nested for loops",
                                    vartuple=("h",
@@ -428,20 +433,15 @@ class ObsTrial(IdealObs):
         mean_gamma_feedback = np.mean(self.marg_gamma_feedback)
         stdev_gamma_feedback = np.std(self.marg_gamma_feedback)
 
-        dict_feedback = dict2save.copy()
-
-        dict2save['obsFeedback'] = False
-        dict_feedback['obsFeedback'] = True
-        dict2save['meanGamma'] = mean_gamma
-        dict_feedback['meanGamma'] = mean_gamma_feedback
-        dict2save['stdevGamma'] = stdev_gamma
-        dict_feedback['stdevGamma'] = stdev_gamma_feedback
+        dict2save['meanFeedback'] = mean_gamma_feedback
+        dict2save['meanNoFeedback'] = mean_gamma
+        dict2save['stdevFeedback'] = stdev_gamma_feedback
+        dict2save['stdevNoFeedback'] = stdev_gamma
 
         # save both dicts to SQLite db
         db = dataset.connect('sqlite:///' + dbname + '.db')
         table = db['feedback']
         table.insert(dict2save)
-        table.insert(dict_feedback)
 
         # # write heavy data to file
         # heavydict = dict()
@@ -463,7 +463,7 @@ if __name__ == "__main__":
     hazard_rates = [0.01]
     hstep = 0.05
     hh = hstep
-    while hh < 0.06:  # true value is 0.51
+    while hh < 0.26:  # true value is 0.51
         hazard_rates += [hh]
         hh += hstep
     printdebug(debugmode=not debug, vartuple=("hazard_rates", hazard_rates))
@@ -476,7 +476,7 @@ if __name__ == "__main__":
     stimstdev = []
     snrstep = 0.2
     snr = snrstep
-    while snr < 0.41:  # true value is 3.01
+    while snr < 1.1:  # true value is 3.01
         stdev = 2.0 / snr
         SNR += [snr]
         stimstdev += [stdev]
@@ -489,20 +489,20 @@ if __name__ == "__main__":
     trial_durations = [50]
     tdstep = 100
     td = tdstep
-    while td < 101:  # true value is 2001
+    while td < 501:  # true value is 2001
         trial_durations += [td]
         td += tdstep
     trial_durations = np.array(trial_durations)
 
     # total number of trials per condition
-    nTrials = 1
+    nTrials = 100
 
     # boolean variables telling script what to plot
     singleTrialOutputs = [True, True, True]
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'test_11'
+    dbname = 'true_2'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
