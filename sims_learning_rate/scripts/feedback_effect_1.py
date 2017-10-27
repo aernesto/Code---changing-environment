@@ -4,7 +4,7 @@ from scipy.stats import rv_discrete
 import scipy
 import datetime
 import dataset
-import pickle
+# import pickle
 
 plt.rcdefaults()
 
@@ -384,25 +384,41 @@ class ObsTrial(IdealObs):
 
     def save2db(self, seed):
         dict2save = dict()
-        dict2save['commit'] = '21b7d9a5c6136b2c5757599cd0025ffd2924a28b'
+        dict2save['commit'] = '1ad8e058cb58db9bebc6e33a98353004a12b8e37'
         dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
         dict2save['discreteTime'] = True
         dict2save['trialNumber'] = self.exp_trial.trial_number
-        dict2save['trialDuration'] = self.exp_trial.duration
+        printdebug(debugmode=not debug, vartuple=("duration",
+                                              self.exp_trial.duration))
+        printdebug(debugmode=not debug, vartuple=("type",
+                                              type(self.exp_trial.duration)))
+        dict2save['trialDuration'] = int(self.exp_trial.duration)
         printdebug(debugmode=not debug,
                    vartuple=("seed has type", type(seed)))
         printdebug(debugmode=not debug, vartuple=("seed", seed))
-        dict2save['initialState'] = self.exp_trial.init_state
-        dict2save['endState'] = self.exp_trial.end_state
-        dict2save['alpha'] = self.prior_h[0]
-        dict2save['beta'] = self.prior_h[1]
+        printdebug(debugmode=not debug, vartuple=("initial state",
+                                              self.exp_trial.init_state))
+        printdebug(debugmode=not debug, vartuple=("type",
+                                              type(self.exp_trial.init_state)))
+        dict2save['initialState'] = int(self.exp_trial.init_state)
+        dict2save['endState'] = int(self.exp_trial.end_state)
+        printdebug(debugmode=not debug, vartuple=("alpha",
+                                              self.prior_h[0]))
+        printdebug(debugmode=not debug, vartuple=("type",
+                                              type(self.prior_h[0])))
+        dict2save['alpha'] = float(self.prior_h[0])
+        dict2save['beta'] = float(self.prior_h[1])
 
         # compute and store time since last change point
         if self.exp_trial.cp_times.size > 0:
             time_last_cp = self.exp_trial.duration - self.exp_trial.cp_times[-1]
         else:
             time_last_cp = self.exp_trial.duration
-        dict2save['timeLastCp'] = time_last_cp
+        printdebug(debugmode=not debug, vartuple=("time last CP",
+                                              time_last_cp))
+        printdebug(debugmode=not debug, vartuple=("type",
+                                              type(time_last_cp)))
+        dict2save['timeLastCp'] = int(time_last_cp)
 
         # compute and store mean and stdev of marginals over CP counts
         mean_gamma, stdev_gamma = (np.mean(self.marg_gamma), np.std(self.marg_gamma))
@@ -424,15 +440,15 @@ class ObsTrial(IdealObs):
         table.insert(dict2save)
         table.insert(dict_feedback)
 
-        # write heavy data to file
-        heavydict = dict()
-        heavydict['seed'] = seed
-        heavydict['marginal-gamma'] = self.marg_gamma
-        # heavydict['post-var-h'] =
-        # heavydict['post-mean-h'] =
-        filename = dbname + '.pickle'
-        with open(filename, 'wb') as handle:
-            pickle.dump(heavydict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        # # write heavy data to file
+        # heavydict = dict()
+        # heavydict['seed'] = seed
+        # heavydict['marginal-gamma'] = self.marg_gamma
+        # # heavydict['post-var-h'] =
+        # # heavydict['post-mean-h'] =
+        # filename = dbname + '.pickle'
+        # with open(filename, 'wb') as handle:
+        #     pickle.dump(heavydict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
@@ -483,7 +499,7 @@ if __name__ == "__main__":
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'test_4'
+    dbname = 'test_6'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
@@ -493,7 +509,7 @@ if __name__ == "__main__":
     printdebug(debugmode=not debug, string="Observer object created")
     aa = datetime.datetime.now().replace(microsecond=0)
     printdebug(debugmode=not debug, string="initial time stored")
-    printdebug(debugmode=True, string="about to execute the launch method")
+    printdebug(debugmode=not debug, string="about to execute the launch method")
     Expt.launch(Observer)
 
     bb = datetime.datetime.now().replace(microsecond=0)
