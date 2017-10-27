@@ -390,7 +390,7 @@ class ObsTrial(IdealObs):
 
     def save2db(self, seed):
         dict2save = dict()
-        dict2save['commit'] = '74966c9a886689306141b7a70abd133ec39d731a'
+        dict2save['commit'] = '14df86f2dc071450cf73012df5d4337290b3e51b'
         dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
         dict2save['discreteTime'] = True
         dict2save['trialNumber'] = int(self.exp_trial.trial_number)
