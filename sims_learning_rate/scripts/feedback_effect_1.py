@@ -125,7 +125,7 @@ class Experiment(object):
                             init_state = self.states[1]
                         printdebug(debugmode=not debug, string="about to create ExpTrial object")
                         np.random.seed(None)
-                        seed = np.random.get_state()
+                        seed = np.random.randint(1e12, dtype=int)
                         curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
                                                   trial_number, init_state, seed=seed)
                         printdebug(debugmode=not debug, string="about to create Stimulus object")
@@ -390,7 +390,7 @@ class ObsTrial(IdealObs):
 
     def save2db(self, seed):
         dict2save = dict()
-        dict2save['commit'] = '1ad8e058cb58db9bebc6e33a98353004a12b8e37'
+        dict2save['commit'] = '57ba4b2e86f4dfef4b6c4f0fb7772d9ed8eeaf18'
         dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
         dict2save['discreteTime'] = True
         dict2save['trialNumber'] = int(self.exp_trial.trial_number)
@@ -401,6 +401,7 @@ class ObsTrial(IdealObs):
                                                   type(self.exp_trial.duration)))
         dict2save['trialDuration'] = int(self.exp_trial.duration)
         dict2save['SNR'] = float(self.obs_noise)
+        dict2save['seed'] = seed
         printdebug(debugmode=not debug,
                    vartuple=("seed has type", type(seed)))
         printdebug(debugmode=not debug, vartuple=("seed", seed))
@@ -435,10 +436,14 @@ class ObsTrial(IdealObs):
 
         dict2save['meanFeedback'] = mean_gamma_feedback
         dict2save['meanNoFeedback'] = mean_gamma
+        dict2save['meandiff'] = mean_gamma_feedback - mean_gamma
+        dict2save['absmeandiff'] = abs(mean_gamma_feedback - mean_gamma)
         dict2save['stdevFeedback'] = stdev_gamma_feedback
         dict2save['stdevNoFeedback'] = stdev_gamma
+        dict2save['stdevdiff'] = stdev_gamma_feedback - stdev_gamma
+        dict2save['absstdevdiff'] = abs(stdev_gamma_feedback - stdev_gamma)
 
-        # save both dicts to SQLite db
+        # save dict to SQLite db
         db = dataset.connect('sqlite:///' + dbname + '.db')
         table = db['feedback']
         table.insert(dict2save)
