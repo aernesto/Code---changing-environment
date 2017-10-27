@@ -7,7 +7,7 @@ The questions that this script should answer are:
 3- count how many trials exist per triplet (duration, h, SNR)
 4- for fixed triplet, compute the average difference (across trials) between the posterior means
     do the same for posterior stdev
-- find the top 10 triplets for which the differences from previous bullet are maximized
+5- find the top 10 triplets for which the differences from previous bullet are maximized
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ import datetime
 import dataset
 
 # define dbname
-dbname = 'test_11.db'
+dbname = 'true_1.db'
 tablename = 'feedback'
 db = dataset.connect('sqlite:///' + dbname)
 table = db[tablename]
@@ -35,31 +35,34 @@ table = db[tablename]
 
 # 3- count how many trials exist per triplet (duration, h, SNR)
 # print('unique values from ' + field)
-# result = db.query('SELECT trialDuration, hazardRate, SNR, obsFeedback, COUNT(*) AS c \
-# FROM feedback GROUP BY trialDuration, SNR, hazardRate, obsFeedback')
+# result = db.query('SELECT trialDuration, hazardRate, SNR, COUNT(*) AS c \
+# FROM feedback GROUP BY trialDuration, SNR, hazardRate')
 # for row in result:
-#     print('quadruple:', row['trialDuration'], row['hazardRate'], row['SNR'], row['obsFeedback'])
+#     print('triplet:', row['trialDuration'], row['hazardRate'], row['SNR'])
 #     print('count:', row['c'])
 # print('-----------------------------------')
 
 
 # 4- for fixed triplet, compute the average difference (across trials) between the posterior means
 #     do the same for posterior stdev
-result1 = db.query('SELECT ID, ')
+result = db.query('SELECT trialDuration, hazardRate, SNR, \
+AVG(meanFeedback - meanNoFeedback) AS meandiff, \
+AVG(stdevFeedback - stdevNoFeedback) AS stdevdiff \
+FROM feedback GROUP BY trialDuration, SNR, hazardRate')
 
 '''
-SELECT
-    a.PurchaseID,
-    ABS(a.PurchaseID - b.PurchaseID) AS diff
-FROM
-    PurchaseID a INNER JOIN PurchaseID b ON a.PurchaseID=b.PurchaseID
-WHERE a.PurchaseID=?
-    AND a.purchaseDate=?
-    AND b.purchaseDate=?'''
+way to compute the variance
+SELECT AVG((feedback.num - sub.average) * (feedback.num - sub.average)) as var from feedback, \
+(SELECT name, AVG(feedback.num) AS average FROM feedback group by name) AS sub \
+where feedback.name = sub.name group by sub.name
+'''
 
+# store results in numpy array
+diffs = np.array([[row['trialDuration'],
+                   row['hazardRate'],
+                   row['SNR'],
+                   row['meandiff'],
+                   row['stdevdiff']] for row in result])
 
-result = db.query('SELECT trialDuration, hazardRate, SNR, obsFeedback, AVG() AS diff \
-FROM feedback GROUP BY trialDuration, SNR, hazardRate, obsFeedback')
-for row in result:
-    print('quadruple:', row['trialDuration'], row['hazardRate'], row['SNR'], row['obsFeedback'])
-    print('count:', row['c'])
+print('mean', np.mean(diffs[:, 3]))
+print('max', np.max(diffs[:, 3]))
