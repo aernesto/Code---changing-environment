@@ -431,10 +431,10 @@ class ObsTrial(IdealObs):
 
         # compute and store mean and stdev of marginals over CP counts
         mean_gamma = np.dot(self.marg_gamma, np.arange(len(self.marg_gamma)))
-        stdev_gamma = np.dot(self.marg_gamma, np.arange(len(self.marg_gamma))**2) - mean_gamma**2
+        stdev_gamma = np.sqrt(np.dot(self.marg_gamma, np.arange(len(self.marg_gamma))**2) - mean_gamma**2)
         mean_gamma_feedback = np.dot(self.marg_gamma_feedback, np.arange(len(self.marg_gamma_feedback)))
-        stdev_gamma_feedback = np.dot(self.marg_gamma_feedback,
-                                      np.arange(len(self.marg_gamma_feedback))**2) - mean_gamma_feedback**2
+        stdev_gamma_feedback = np.sqrt(np.dot(self.marg_gamma_feedback,
+                                      np.arange(len(self.marg_gamma_feedback))**2) - mean_gamma_feedback**2)
 
         dict2save['meanFeedback'] = mean_gamma_feedback
         dict2save['meanNoFeedback'] = mean_gamma
@@ -509,7 +509,7 @@ if __name__ == "__main__":
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'true_5'
+    dbname = 'true_6'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
