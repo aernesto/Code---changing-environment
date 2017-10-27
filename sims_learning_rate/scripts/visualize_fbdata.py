@@ -47,7 +47,7 @@ db = dataset.connect('sqlite:///' + dbname)
 table = db[tablename]
 
 
-def list_tables():
+def list_fields():
     """
     :return: list existing fields in the table
     """
@@ -106,7 +106,7 @@ def analyze_diff(typediff='new'):
     """
     if typediff == 'old':
         result1 = db.query('SELECT trialDuration, hazardRate, SNR, '
-                           '(meanFeedback - meanNoFeedback) as meandiff, '
+                           '(meanFeedback - meanNoFeedback) as meandiff, ' 
                            '(stdevFeedback - stdevNoFeedback) as stdevdiff '
                            'FROM feedback')
     elif typediff == 'new':
@@ -308,9 +308,9 @@ def plots1d(array, fixed_vars, lastfigure):
 
 if __name__ == "__main__":
     fignum = 0
-    # list_tables()
+    # list_fields()
     # list_unique(['trialDuration', 'SNR', 'hazardRate'])
     # list_triplets()
-    # simdata = analyze_diff(typediff='new')
+    simdata = analyze_diff(typediff='new')
     # plot_hist_cv(simdata, fignum)
-    # plots1d(simdata, {'hazardRate': 0.1, 'SNR': 1.0}, fignum)
+    plots1d(simdata, {'hazardRate': 0.1, 'SNR': 1.0}, fignum)
