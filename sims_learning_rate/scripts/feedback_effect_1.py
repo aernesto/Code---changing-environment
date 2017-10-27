@@ -4,6 +4,7 @@ from scipy.stats import rv_discrete
 import scipy
 import datetime
 import dataset
+
 # import pickle
 
 plt.rcdefaults()
@@ -387,25 +388,27 @@ class ObsTrial(IdealObs):
         dict2save['commit'] = '1ad8e058cb58db9bebc6e33a98353004a12b8e37'
         dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
         dict2save['discreteTime'] = True
-        dict2save['trialNumber'] = self.exp_trial.trial_number
+        dict2save['trialNumber'] = int(self.exp_trial.trial_number)
+        dict2save['hazardRate'] = float(self.exp_trial.true_h)
         printdebug(debugmode=not debug, vartuple=("duration",
-                                              self.exp_trial.duration))
+                                                  self.exp_trial.duration))
         printdebug(debugmode=not debug, vartuple=("type",
-                                              type(self.exp_trial.duration)))
+                                                  type(self.exp_trial.duration)))
         dict2save['trialDuration'] = int(self.exp_trial.duration)
+        dict2save['SNR'] = float(self.obs_noise)
         printdebug(debugmode=not debug,
                    vartuple=("seed has type", type(seed)))
         printdebug(debugmode=not debug, vartuple=("seed", seed))
         printdebug(debugmode=not debug, vartuple=("initial state",
-                                              self.exp_trial.init_state))
+                                                  self.exp_trial.init_state))
         printdebug(debugmode=not debug, vartuple=("type",
-                                              type(self.exp_trial.init_state)))
+                                                  type(self.exp_trial.init_state)))
         dict2save['initialState'] = int(self.exp_trial.init_state)
         dict2save['endState'] = int(self.exp_trial.end_state)
         printdebug(debugmode=not debug, vartuple=("alpha",
-                                              self.prior_h[0]))
+                                                  self.prior_h[0]))
         printdebug(debugmode=not debug, vartuple=("type",
-                                              type(self.prior_h[0])))
+                                                  type(self.prior_h[0])))
         dict2save['alpha'] = float(self.prior_h[0])
         dict2save['beta'] = float(self.prior_h[1])
 
@@ -415,9 +418,9 @@ class ObsTrial(IdealObs):
         else:
             time_last_cp = self.exp_trial.duration
         printdebug(debugmode=not debug, vartuple=("time last CP",
-                                              time_last_cp))
+                                                  time_last_cp))
         printdebug(debugmode=not debug, vartuple=("type",
-                                              type(time_last_cp)))
+                                                  type(time_last_cp)))
         dict2save['timeLastCp'] = int(time_last_cp)
 
         # compute and store mean and stdev of marginals over CP counts
@@ -425,10 +428,10 @@ class ObsTrial(IdealObs):
         mean_gamma_feedback = np.mean(self.marg_gamma_feedback)
         stdev_gamma_feedback = np.std(self.marg_gamma_feedback)
 
-        dict_feedback = dict2save
+        dict_feedback = dict2save.copy()
 
-        dict2save['feedback'] = False
-        dict_feedback['feedback'] = True
+        dict2save['obsFeedback'] = False
+        dict_feedback['obsFeedback'] = True
         dict2save['meanGamma'] = mean_gamma
         dict_feedback['meanGamma'] = mean_gamma_feedback
         dict2save['stdevGamma'] = stdev_gamma
@@ -499,7 +502,7 @@ if __name__ == "__main__":
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'test_6'
+    dbname = 'test_11'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
