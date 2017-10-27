@@ -54,16 +54,23 @@ def list_fields():
     print(table.columns)
 
 
-def list_unique(fields):
+def list_unique(fields, limit=None):
     """
     :param fields: list of strings containing field names from SQLite database
     :return: list unique values in each field from fields
     """
     for field in fields:
         # print('unique values from ' + field)
-        for thisrow in table.distinct(field):
-            # print('type', type(row[field]))
-            print(thisrow[field])
+        if limit is None:
+            for thisrow in table.distinct(field):
+                print(thisrow[field])
+        else:
+            counter = 0
+            for thisrow in table.distinct(field):
+                print(thisrow[field])
+                counter += 1
+                if counter == limit:
+                    break
         print('-----------------------------------')
 
 
@@ -112,6 +119,9 @@ def analyze_diff(typediff='new'):
     elif typediff == 'new':
         result1 = db.query('SELECT trialDuration, hazardRate, SNR, meandiff, '
                            'stdevdiff FROM feedback')
+    elif typediff == 'abs':
+        result1 = db.query('SELECT trialDuration, hazardRate, SNR, absmeandiff AS meandiff, '
+                           'absstdevdiff AS stdevdiff FROM feedback')
 
     # store results in numpy array
     '''
@@ -296,12 +306,12 @@ def plots1d(array, fixed_vars, lastfigure):
     lastfigure += 1
     plt.figure(lastfigure)
     plt.errorbar(indepvar, means, yerr=err_means)
-    plt.title("avg diff in means as fcn of " + indepvarname)
+    plt.title("avg abs diff in means as fcn of " + indepvarname)
     plt.xlabel(indepvarname)
     lastfigure += 1
     plt.figure(lastfigure)
     plt.errorbar(indepvar, stdevs, yerr=err_stdevs)
-    plt.title("avg diff in stdev as fcn of " + indepvarname)
+    plt.title("avg abs diff in var as fcn of " + indepvarname)
     plt.xlabel(indepvarname)
     plt.show()
 
@@ -309,8 +319,8 @@ def plots1d(array, fixed_vars, lastfigure):
 if __name__ == "__main__":
     fignum = 0
     # list_fields()
-    # list_unique(['trialDuration', 'SNR', 'hazardRate'])
+    # list_unique(['meandiff', 'absmeandiff'], limit=10)
     # list_triplets()
-    simdata = analyze_diff(typediff='new')
+    simdata = analyze_diff(typediff='abs')
     # plot_hist_cv(simdata, fignum)
     plots1d(simdata, {'hazardRate': 0.1, 'SNR': 1.0}, fignum)
