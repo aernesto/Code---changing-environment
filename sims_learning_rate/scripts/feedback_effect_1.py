@@ -400,7 +400,7 @@ class ObsTrial(IdealObs):
         printdebug(debugmode=not debug, vartuple=("type",
                                                   type(self.exp_trial.duration)))
         dict2save['trialDuration'] = int(self.exp_trial.duration)
-        dict2save['SNR'] = round(float(self.obs_noise), 3)
+        dict2save['SNR'] = round(float(2 / self.obs_noise), 3)
         dict2save['seed'] = seed
         printdebug(debugmode=not debug,
                    vartuple=("seed has type", type(seed)))
@@ -502,14 +502,14 @@ if __name__ == "__main__":
     trial_durations = np.array(trial_durations, dtype=int)
 
     # total number of trials per condition
-    nTrials = 10
+    nTrials = 100
 
     # boolean variables telling script what to plot
     singleTrialOutputs = [True, True, True]
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'true_4'
+    dbname = 'true_5'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,
