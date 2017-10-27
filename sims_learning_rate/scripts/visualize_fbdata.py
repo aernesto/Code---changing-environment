@@ -11,6 +11,7 @@ The questions that this script should answer are:
 """
 import numpy as np
 import dataset
+import matplotlib.pyplot as plt
 
 # Debug mode
 debug = True
@@ -39,8 +40,8 @@ def printdebug(debugmode, string=None, vartuple=None):
         print('-------------------------')
 
 
-# define dbname
-dbname = 'true_3.db'
+# get connection to SQLite database where results are stored
+dbname = 'true_5.db'
 tablename = 'feedback'
 db = dataset.connect('sqlite:///' + dbname)
 table = db[tablename]
@@ -87,9 +88,21 @@ def list_triplets(prints=True):
 
 def analyze_diff(typediff='new'):
     """
-    :param typediff: Either 'old' or 'new', depending on whether the table analyzed was before or after true_3.db
-    :return: for fixed triplet, computes the average difference (across trials) between the posterior means
-            does the same for posterior stdev
+    :param typediff: Either 'old' or 'new', depending on whether the table
+                    analyzed was before or after true_3.db
+    :return: numpy array "array_results" with, as many rows as there are distinct triplets,
+            (trialDuration, hazardRate, SNR)
+            Columns are as follows:
+            column0: trialDuration
+            column1: hazardRate
+            column2: SNR
+            column3: difference of means, averaged across trials
+            column4: difference of stdev, averaged across trials
+            column5: standard deviation of the difference of means
+            column6: standard deviation of the difference of stdev
+            column7: Coefficient of variation for abs(difference of means)
+            column8: Coefficient of variation for abs(difference of stdev)
+            column9: sample size
     """
     if typediff == 'old':
         result1 = db.query('SELECT trialDuration, hazardRate, SNR, '
@@ -102,17 +115,6 @@ def analyze_diff(typediff='new'):
 
     # store results in numpy array
     '''
-    column0: trialDuration
-    column1: hazardRate
-    column2: SNR
-    column3: difference of means, averaged across trials
-    column4: difference of stdev, averaged across trials
-    column5: standard deviation of the difference of means
-    column6: standard deviation of the difference of stdev
-    column7: Coefficient of variation for abs(difference of means)
-    column8: Coefficient of variation for abs(difference of stdev)
-    column9: sample size
-    
     ====
     Recall formula for running average
     (https://stackoverflow.com/questions/28820904/how-to-efficiently-compute-average-on-the-fly-moving-average)
@@ -158,13 +160,13 @@ def analyze_diff(typediff='new'):
                 if run_absmeandiff_avg > 1e-6:
                     cv_meandiff = std_absmeandiff / run_absmeandiff_avg
                 else:
-                    cv_meandiff = 0
+                    cv_meandiff = np.nan
 
                 std_absstdevdiff = np.sqrt(run_stdevdiff_var / coef)
                 if run_absstdevdiff_avg > 1e-6:
                     cv_stdevdiff = std_absstdevdiff / run_absstdevdiff_avg
                 else:
-                    cv_stdevdiff = 0
+                    cv_stdevdiff = np.nan
 
                 # store
                 array_results[array_row, 3:10] = (run_meandiff_avg,
@@ -200,11 +202,115 @@ def analyze_diff(typediff='new'):
             run_absstdevdiff_var += var_aux_absdiff * (abs(row['stdevdiff']) - run_absstdevdiff_avg)
         nsamples += 1
 
-    print(array_results)
+    return array_results
+
+
+def plot_hist_cv(array, lastfigure):
+    """
+    :param array: array returned by analyze_diff()
+    :param lastfigure: integer to generate figure numbers
+    :return: two histograms for the CV of the absolute values of the differences
+            between posterior means; and between posterior stdevs.
+    """
+    lastfigure += 1
+    plt.figure(lastfigure)
+    absmeans = array[:, 7]
+    absmeans = absmeans[~np.isnan(absmeans)]
+    plt.hist(absmeans, bins='auto')
+    plt.title('CV diff means')
+    plt.xlabel('CV of absolute diff between posterior means')
+    plt.ylabel('count out of 100')
+    lastfigure += 1
+    plt.figure(lastfigure)
+    absstdev = array[:, 8]
+    absstdev = absstdev[~np.isnan(absstdev)]
+    plt.hist(absstdev, bins='auto')
+    plt.title('CV diff std')
+    plt.xlabel('CV of absolute diff between posterior stdev')
+    plt.ylabel('count out of 100')
+    plt.show()
+
+
+def plots1d(array, fixed_vars, lastfigure):
+    """
+    :param array: numpy array returned by analyze_diff()
+    :param fixed_vars: dict with two key-value pairs.
+        key: one of 'SNR', 'hazardRate', 'trialDuration'
+        value: an appropriate value existing in the database
+    :param lastfigure: integer to generate figure numbers
+    :return: four errorbar plots for the mean (error bars represent 1 stdev) of:
+            - the difference between posterior means;
+            - the difference between posterior stdevs;
+            - the absolute difference between posterior means;
+            - the absolute difference between posterior stdevs.
+    """
+    keylist = list(fixed_vars.keys())
+    valuelist = list(fixed_vars.values())
+    # pass array to an equivalent SQLite database on which the query may be run
+    # get connection to SQLite database where results are stored
+    db_aux = dataset.connect('sqlite:///:memory:')
+    table_aux = db_aux[tablename]
+
+    # fill in the database row by row from the numpy array
+    for array_row in np.arange(array.shape[0]):
+        elts = array[array_row, :]
+        table_aux.insert({'trialDuration': elts[0],
+                          'hazardRate': elts[1],
+                          'SNR': elts[2],
+                          'meanMeandiff': elts[3],
+                          'meanStdevdiff': elts[4],
+                          'stdMeandiff': elts[5],
+                          'stdStdevdiff': elts[6],
+                          'cv1': elts[7],
+                          'cv2': elts[8],
+                          'nsamples': elts[9]})
+
+    # get the free variable name (indepvar)
+    if 'SNR' not in keylist:
+        indepvarname = 'SNR'
+    elif 'trialDuration' not in keylist:
+        indepvarname = 'trialDuration'
+    elif 'hazardRate' not in keylist:
+        indepvarname = 'hazardRate'
+
+    printdebug(debugmode=debug, vartuple=('indepvarname', indepvarname))
+
+    result2 = db_aux.query('SELECT meanMeandiff, stdMeandiff, meanStdevdiff, \
+    stdStdevdiff, {} FROM feedback WHERE {} = {} AND {} = {}'.format(indepvarname,
+                                                                     keylist[0],
+                                                                     valuelist[0],
+                                                                     keylist[1],
+                                                                     valuelist[1]))
+    indepvar = []
+    means = indepvar.copy()
+    stdevs = indepvar.copy()
+    err_means = indepvar.copy()
+    err_stdevs = indepvar.copy()
+    for row in result2:
+        indepvar += [row[indepvarname]]
+        means += [row['meanMeandiff']]
+        stdevs += [row['meanStdevdiff']]
+        err_means += [row['stdMeandiff']]
+        err_stdevs += [row['stdStdevdiff']]
+
+    lastfigure += 1
+    plt.figure(lastfigure)
+    plt.errorbar(indepvar, means, yerr=err_means)
+    plt.title("avg diff in means as fcn of " + indepvarname)
+    plt.xlabel(indepvarname)
+    lastfigure += 1
+    plt.figure(lastfigure)
+    plt.errorbar(indepvar, stdevs, yerr=err_stdevs)
+    plt.title("avg diff in stdev as fcn of " + indepvarname)
+    plt.xlabel(indepvarname)
+    plt.show()
 
 
 if __name__ == "__main__":
+    fignum = 0
     # list_tables()
     # list_unique(['trialDuration', 'SNR', 'hazardRate'])
     # list_triplets()
-    analyze_diff(typediff='new')
+    # simdata = analyze_diff(typediff='new')
+    # plot_hist_cv(simdata, fignum)
+    # plots1d(simdata, {'hazardRate': 0.1, 'SNR': 1.0}, fignum)
