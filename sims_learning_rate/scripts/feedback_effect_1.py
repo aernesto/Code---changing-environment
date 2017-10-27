@@ -125,7 +125,7 @@ class Experiment(object):
                             init_state = self.states[1]
                         printdebug(debugmode=not debug, string="about to create ExpTrial object")
                         np.random.seed(None)
-                        seed = np.random.randint(1e12, dtype=int)
+                        seed = np.random.randint(1000000000000, dtype=int)
                         curr_exp_trial = ExpTrial(self, h, duration, stim_noise,
                                                   trial_number, init_state, seed=seed)
                         printdebug(debugmode=not debug, string="about to create Stimulus object")
@@ -390,17 +390,17 @@ class ObsTrial(IdealObs):
 
     def save2db(self, seed):
         dict2save = dict()
-        dict2save['commit'] = '57ba4b2e86f4dfef4b6c4f0fb7772d9ed8eeaf18'
+        dict2save['commit'] = '69f6ad5246d68f5891327795bdd8f13ced5ad2a5'
         dict2save['path2file'] = 'sims_learning_rate/scripts/feedback_effect_1.py'
         dict2save['discreteTime'] = True
         dict2save['trialNumber'] = int(self.exp_trial.trial_number)
-        dict2save['hazardRate'] = float(self.exp_trial.true_h)
+        dict2save['hazardRate'] = round(float(self.exp_trial.true_h), 3)
         printdebug(debugmode=not debug, vartuple=("duration",
                                                   self.exp_trial.duration))
         printdebug(debugmode=not debug, vartuple=("type",
                                                   type(self.exp_trial.duration)))
         dict2save['trialDuration'] = int(self.exp_trial.duration)
-        dict2save['SNR'] = float(self.obs_noise)
+        dict2save['SNR'] = round(float(self.obs_noise), 3)
         dict2save['seed'] = seed
         printdebug(debugmode=not debug,
                    vartuple=("seed has type", type(seed)))
@@ -430,9 +430,11 @@ class ObsTrial(IdealObs):
         dict2save['timeLastCp'] = int(time_last_cp)
 
         # compute and store mean and stdev of marginals over CP counts
-        mean_gamma, stdev_gamma = (np.mean(self.marg_gamma), np.std(self.marg_gamma))
-        mean_gamma_feedback = np.mean(self.marg_gamma_feedback)
-        stdev_gamma_feedback = np.std(self.marg_gamma_feedback)
+        mean_gamma = np.dot(self.marg_gamma, np.arange(len(self.marg_gamma)))
+        stdev_gamma = np.dot(self.marg_gamma, np.arange(len(self.marg_gamma))**2) - mean_gamma**2
+        mean_gamma_feedback = np.dot(self.marg_gamma_feedback, np.arange(len(self.marg_gamma_feedback)))
+        stdev_gamma_feedback = np.dot(self.marg_gamma_feedback,
+                                      np.arange(len(self.marg_gamma_feedback))**2) - mean_gamma_feedback**2
 
         dict2save['meanFeedback'] = mean_gamma_feedback
         dict2save['meanNoFeedback'] = mean_gamma
@@ -466,7 +468,7 @@ if __name__ == "__main__":
                string="debug prints activated")
     # list of hazard rates to use in sim
     hazard_rates = [0.01]
-    hstep = 0.05
+    hstep = round(0.05, 3)
     hh = hstep
     while hh < 0.26:  # true value is 0.51
         hazard_rates += [hh]
@@ -479,7 +481,7 @@ if __name__ == "__main__":
     # list of SNRs to use in sim
     SNR = []
     stimstdev = []
-    snrstep = 0.2
+    snrstep = round(0.2, 3)
     snr = snrstep
     while snr < 1.1:  # true value is 3.01
         stdev = 2.0 / snr
@@ -497,17 +499,17 @@ if __name__ == "__main__":
     while td < 501:  # true value is 2001
         trial_durations += [td]
         td += tdstep
-    trial_durations = np.array(trial_durations)
+    trial_durations = np.array(trial_durations, dtype=int)
 
     # total number of trials per condition
-    nTrials = 100
+    nTrials = 10
 
     # boolean variables telling script what to plot
     singleTrialOutputs = [True, True, True]
     multiTrialOutputs = [True, True]
 
     # filenames for saving data
-    dbname = 'true_2'
+    dbname = 'true_4'
 
     printdebug(debugmode=not debug, string="about to create expt object")
     Expt = Experiment(setof_stim_noise=stimstdev, exp_dt=dt, setof_trial_dur=trial_durations,

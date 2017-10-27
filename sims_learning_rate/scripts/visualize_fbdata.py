@@ -9,133 +9,202 @@ The questions that this script should answer are:
     do the same for posterior stdev
 5- find the top 10 triplets for which the differences from previous bullet are maximized
 """
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import rv_discrete
-import scipy
-import datetime
 import dataset
 
+# Debug mode
+debug = True
+
+
+def printdebug(debugmode, string=None, vartuple=None):
+    """
+    prints string, varname and var for debug purposes
+    :param debugmode: True or False
+    :param string: Custom message useful for debugging
+    :param vartuple: Tuple (varname, var), where:
+        :varname: string representing name of variable to display
+        :var: actual Python variable to print on screen
+    :return:
+    """
+    if debugmode:
+        print('-------------------------')
+        if string is None:
+            pass
+        else:
+            print(string)
+        if vartuple is None:
+            pass
+        else:
+            print(vartuple[0], '=', vartuple[1])
+        print('-------------------------')
+
+
 # define dbname
-dbname = 'true_2.db'
+dbname = 'true_3.db'
 tablename = 'feedback'
 db = dataset.connect('sqlite:///' + dbname)
 table = db[tablename]
 
-# 1- list existing fields in the table
-# print(table.columns)
-#
-# # 2- list unique values in each field
-# for field in table.columns:
-#     # print('unique values from ' + field)
-#     for row in table.distinct(field):
-#         # print('type', type(row[field]))
-#         print(row[field])
-#     print('-----------------------------------')
 
-# 3- count how many trials exist per triplet (duration, h, SNR)
-result0 = db.query('SELECT trialDuration, hazardRate, SNR, COUNT(*) AS c \
-FROM feedback GROUP BY trialDuration, SNR, hazardRate')
-array_size = 0
-for row in result0:
-    array_size += 1
-#     print('triplet:', row['trialDuration'], row['hazardRate'], row['SNR'])
-#     print('count:', row['c'])
-# print('-----------------------------------')
+def list_tables():
+    """
+    :return: list existing fields in the table
+    """
+    print(table.columns)
 
 
-# 4- for fixed triplet, compute the average difference (across trials) between the posterior means
-#     do the same for posterior stdev
-result1 = db.query('SELECT trialDuration, hazardRate, SNR, '
-                   '(meanFeedback - meanNoFeedback) as meandiff, '
-                   '(stdevFeedback - stdevNoFeedback) as stdevdiff '
-                   'FROM feedback GROUP BY trialDuration, SNR, hazardRate')
+def list_unique(fields):
+    """
+    :param fields: list of strings containing field names from SQLite database
+    :return: list unique values in each field from fields
+    """
+    for field in fields:
+        # print('unique values from ' + field)
+        for thisrow in table.distinct(field):
+            # print('type', type(row[field]))
+            print(thisrow[field])
+        print('-----------------------------------')
 
-# store results in numpy array
-'''
-column0: trialDuration
-column1: hazardRate
-column2: SNR
-column3: difference of means, averaged across trials
-column4: difference of stdev, averaged across trials
-column5: standard deviation of the difference of means
-column6: standard deviation of the difference of stdev
-column7: Coefficient of variation for abs(difference of means)
-column8: Coefficient of variation for abs(difference of stdev)
-column9: sample size
 
-====
-Recall formula for running average
-(https://stackoverflow.com/questions/28820904/how-to-efficiently-compute-average-on-the-fly-moving-average)
+def list_triplets(prints=True):
+    """
+    :param prints: True to get printed output, False if only the count is desired
+    :return: prints the distinct values of each triplet (duration, h, SNR) if prints = True
+            returns the count of these distinct triplets
+    """
+    result0 = db.query('SELECT trialDuration, hazardRate, SNR, COUNT(trialNumber) AS c \
+    FROM feedback GROUP BY trialDuration, SNR, hazardRate')
+    count = 0
+    for row in result0:
+        count += 1
+        if prints:
+            print('triplet:', row['trialDuration'], round(row['hazardRate'], 3), round(row['SNR'], 3))
+            print('count:', row['c'])
+            print('-----------------------------------')
+    printdebug(debugmode=not debug, vartuple=('nb of distinct triplets', count))
+    return count
 
-n=1;
-curAvg = 0;
-loop{
-  curAvg = curAvg + (newNum - curAvg)/n;
-  n++;
-}
 
-====
-Recall formula for running variance 
-(https://www.johndcook.com/blog/standard_deviation/)
+def analyze_diff(typediff='new'):
+    """
+    :param typediff: Either 'old' or 'new', depending on whether the table analyzed was before or after true_3.db
+    :return: for fixed triplet, computes the average difference (across trials) between the posterior means
+            does the same for posterior stdev
+    """
+    if typediff == 'old':
+        result1 = db.query('SELECT trialDuration, hazardRate, SNR, '
+                           '(meanFeedback - meanNoFeedback) as meandiff, '
+                           '(stdevFeedback - stdevNoFeedback) as stdevdiff '
+                           'FROM feedback')
+    elif typediff == 'new':
+        result1 = db.query('SELECT trialDuration, hazardRate, SNR, meandiff, '
+                           'stdevdiff FROM feedback')
 
-Initialize M1 = x1 and S1 = 0.
+    # store results in numpy array
+    '''
+    column0: trialDuration
+    column1: hazardRate
+    column2: SNR
+    column3: difference of means, averaged across trials
+    column4: difference of stdev, averaged across trials
+    column5: standard deviation of the difference of means
+    column6: standard deviation of the difference of stdev
+    column7: Coefficient of variation for abs(difference of means)
+    column8: Coefficient of variation for abs(difference of stdev)
+    column9: sample size
+    
+    ====
+    Recall formula for running average
+    (https://stackoverflow.com/questions/28820904/how-to-efficiently-compute-average-on-the-fly-moving-average)
+    
+    n=1;
+    curAvg = 0;
+    loop{
+      curAvg = curAvg + (newNum - curAvg)/n;
+      n++;
+    }
+    
+    ====
+    Recall formula for running variance 
+    (https://www.johndcook.com/blog/standard_deviation/)
+    
+    Initialize M1 = x1 and S1 = 0.
+    
+    For subsequent x‘s, use the recurrence formulas
+    
+    Mk = Mk-1+ (xk – Mk-1)/k               -- this is exactly the running average
+    Sk = Sk-1 + (xk – Mk-1)*(xk – Mk).
+    
+    For 2 ≤ k ≤ n, the kth estimate of the variance is s2 = Sk/(k – 1).
+    
+    '''
+    array_results = np.zeros((list_triplets(prints=False), 10))
+    array_row = -1
+    lasttriplet = (0, 0, 0)
+    nsamples = 1
+    run_meandiff_avg, run_meandiff_var, run_stdevdiff_avg, run_stdevdiff_var = (0, 0, 0, 0)
+    run_absmeandiff_avg, run_absmeandiff_var, run_absstdevdiff_avg, run_absstdevdiff_var = (0, 0, 0, 0)
+    ccc = 0
+    for row in result1:
+        ccc += 1
+        printdebug(debugmode=not debug, vartuple=("iteration, ", ccc))
+        newtriplet = (int(row['trialDuration']), row['hazardRate'], row['SNR'])
+        if newtriplet != lasttriplet:
+            if nsamples > 1:
+                nsamples -= 1  # to correct for last incorrect increment
+                coef = nsamples - 1
+                # compute CVs to store
+                std_absmeandiff = np.sqrt(run_meandiff_var / coef)
+                if run_absmeandiff_avg > 1e-6:
+                    cv_meandiff = std_absmeandiff / run_absmeandiff_avg
+                else:
+                    cv_meandiff = 0
 
-For subsequent x‘s, use the recurrence formulas
+                std_absstdevdiff = np.sqrt(run_stdevdiff_var / coef)
+                if run_absstdevdiff_avg > 1e-6:
+                    cv_stdevdiff = std_absstdevdiff / run_absstdevdiff_avg
+                else:
+                    cv_stdevdiff = 0
 
-Mk = Mk-1+ (xk – Mk-1)/k               -- this is exactly the running average
-Sk = Sk-1 + (xk – Mk-1)*(xk – Mk).
+                # store
+                array_results[array_row, 3:10] = (run_meandiff_avg,
+                                                  run_stdevdiff_avg,
+                                                  np.sqrt(run_meandiff_var / coef),
+                                                  np.sqrt(run_stdevdiff_var / coef),
+                                                  cv_meandiff,
+                                                  cv_stdevdiff,
+                                                  nsamples)
 
-For 2 ≤ k ≤ n, the kth estimate of the variance is s2 = Sk/(k – 1).
+            nsamples = 1
+            array_row += 1
+            # fill in first 3 columns
+            array_results[array_row, 0:3] = newtriplet
+            lasttriplet = newtriplet
 
-'''
-array_results = np.zeros((array_size, 10))
-array_row = -1
-counter = 0
-lasttriplet = (0, 0, 0)
-nsamples = 1
-run_meandiff_avg, run_meandiff_var, run_stdevdiff_avg, run_stdevdiff_var = (0, 0, 0, 0)
-run_absmeandiff_avg, run_absmeandiff_var, run_absstdevdiff_avg, run_absstdevdiff_var = (0, 0, 0, 0)
-for row in result1:
-    newtriplet = (int(row['trialDuration']), round(row['hazardRate'], 3), round(row['SNR'], 3))
-    if newtriplet != lasttriplet:
+        # compute running averages
+        mean_aux_diff = row['meandiff'] - run_meandiff_avg
+        var_aux_diff = row['stdevdiff'] - run_stdevdiff_avg
+        run_meandiff_avg += mean_aux_diff / nsamples
+        run_stdevdiff_avg += var_aux_diff / nsamples
+
+        mean_aux_absdiff = abs(row['meandiff']) - run_absmeandiff_avg
+        var_aux_absdiff = abs(row['stdevdiff']) - run_absstdevdiff_avg
+        run_absmeandiff_avg += mean_aux_absdiff / nsamples
+        run_absstdevdiff_avg += var_aux_absdiff / nsamples
+
+        # compute running variances
         if nsamples > 1:
-            coef = nsamples - 1
-            # compute CVs to store
-            std_absmeandiff = np.sqrt(run_meandiff_var / coef)
-            CV_meandiff = std_absmeandiff / run_absmeandiff_avg
-            std_absstdevdiff = np.sqrt(run_stdevdiff_var / coef)
-            CV_stdevdiff = std_absstdevdiff / run_absstdevdiff_avg
+            run_meandiff_var += mean_aux_diff * (row['meandiff'] - run_meandiff_avg)
+            run_stdevdiff_var += var_aux_diff * (row['stdevdiff'] - run_stdevdiff_avg)
+            run_absmeandiff_var += mean_aux_absdiff * (abs(row['meandiff']) - run_absmeandiff_avg)
+            run_absstdevdiff_var += var_aux_absdiff * (abs(row['stdevdiff']) - run_absstdevdiff_avg)
+        nsamples += 1
 
-            # store
-            array_results[array_row, 3:10] = (run_meandiff_avg,
-                                              run_stdevdiff_avg,
-                                              np.sqrt(run_meandiff_var / coef),
-                                              np.sqrt(run_stdevdiff_var / coef),
-                                              CV_meandiff,
-                                              CV_stdevdiff,
-                                              nsamples)
+    print(array_results)
 
-        nsamples = 1
-        array_row += 1
-        # fill in first 3 columns
-        array_results[array_row, 0:3] = newtriplet
 
-    # compute running averages
-    mean_aux_diff = row['meandiff'] - run_meandiff_avg
-    var_aux_diff = row['stdevdiff'] - run_stdevdiff_avg
-    run_meandiff_avg += mean_aux_diff / nsamples
-    run_stdevdiff_avg += var_aux_diff / nsamples
-
-    mean_aux_absdiff = abs(row['meandiff']) - run_absmeandiff_avg
-    var_aux_absdiff = abs(row['stdevdiff']) - run_absstdevdiff_avg
-    run_absmeandiff_avg += mean_aux_absdiff / nsamples
-    run_absstdevdiff_avg += var_aux_absdiff / nsamples
-
-    # compute running variances
-    if nsamples > 1:
-        run_meandiff_var += mean_aux_diff * (row['meandiff'] - run_meandiff_avg)
-        run_stdevdiff_var += var_aux_diff * (row['stdevdiff'] - run_stdevdiff_avg)
-        run_absmeandiff_var += mean_aux_absdiff * (abs(row['meandiff']) - run_absmeandiff_avg)
-        run_absstdevdiff_var += var_aux_absdiff * (abs(row['stdevdiff']) - run_absstdevdiff_avg)
-    nsamples += 1
+if __name__ == "__main__":
+    # list_tables()
+    # list_unique(['trialDuration', 'SNR', 'hazardRate'])
+    # list_triplets()
+    analyze_diff(typediff='new')
