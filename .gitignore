@@ -7,3 +7,4 @@ sims_learning_rate/scripts/.idea/*
 ClickTask/Python/Untitled.ipynb
 *.db
 *.pickle
+sims_learning_rate/scripts/cross_over/.ipynb_checkpoints/*
