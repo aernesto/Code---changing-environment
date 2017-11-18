@@ -210,16 +210,16 @@ def evolve_ode(hh, stim, lr, hr, stim_dur):
 if __name__ == "__main__":
     # set connection to SQLite database
     # name of SQLite db
-    dbname = 'test_2_clicks'
+    dbname = 'test_3_clicks'
     # create connection to SQLite db
     db = dataset.connect('sqlite:///' + dbname + '.db')
     # get handle for specific table of the db
     table = db['perf']
 
     # set parameters
-    num_trials = 100
-    rate_low = 2  # in Hz
-    rate_high = 38
+    num_trials = 2000
+    rate_low = 14  # in Hz
+    rate_high = 40 - rate_low
     trial_duration = 1  # in sec
     hazard_rate = 1  # in Hz
     list_assumed_h = [.5, 1, 1.5, 2]  # assumed hazard rate in Hz
