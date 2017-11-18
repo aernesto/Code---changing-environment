@@ -1,0 +1,40 @@
+For all sims, and all runs, store the random seed.
+
+1/ Obtain the posterior variance via 20 points of the density AND via the 
+analytical formula, at times: 
+500; 1,000; ...; 3,000 msec.
+For a single realization of the stationary chain (fixed click rates).
+
+2/ Redo 1/ for 500 runs, so that at each of the time steps 500; 1,000; ...;
+3,000; msec, we may plot a histogram of the variance.
+
+3/ Redo 2/ for several values of the SNR (i.e. vary the click rates).
+Plot the posterior mean variance (with error bars) as a function of time. Put 1
+curve per SNR value. So keep the number of SNR values around 6: something like 
+0.1; 0.5; 1; 1.5; 2; 3. --> translate this into click rate pairs.
+
+4/ Add one theoretical curve corresponding to the infinite SNR case.
+
+This will already answer the question about speed of learning.
+
+-------- stop here for Cosyne abstract ---------
+
+5/ Redo 2/ only for time step 1,000; but for a 1,000 distinct SNR values. Check
+that the average variance is a monotonic function (even injective) of the SNR.
+
+6/ Redo 2/, only for time step 1,000; for many SNR values (around 1,000). Then,
+compute also P (Correct) across the 1,000 trials; for each SNR value. 
+Also, for each simulated trajectory, also run the non-learning model from SIAM 
+Rev and compute P (correct).
+Then, plot P (Correct) as a function of the posterior variance, and mark the
+single point coming from the SIAM model.
+
+7/ If 5/ showed injection of the mapping SNR -> mean variance, then the plots 
+from 6/ should give us a notion of the impact of learning the rate on 
+performance. Compute the same curves as in 6/, but instead of using the SNR to 
+vary the variance, use the prior over h. That is, keep SNR and mode of prior 
+fixed, and vary the prior variance across 1,000 distinct values.
+For each run, use also SIAM Rev model.
+We hope to get the same curves as in 6/.
+
+8/ Redo 7/, but for 6 distinct values of SNR. Superimpose curves on same plot.
