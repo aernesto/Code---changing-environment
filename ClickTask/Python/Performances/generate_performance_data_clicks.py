@@ -8,6 +8,32 @@ Stores data with seed in SQLite database
 import dataset
 import numpy as np
 import datetime
+import matplotlib.pyplot as plt
+
+debug = False
+
+
+def printdebug(string):
+    if debug:
+        print(string)
+
+
+def raster(event_times_list, **kwargs):
+    """
+    Creates a raster plot
+    Parameters
+    ----------
+    event_times_list : iterable
+                       a list of event time iterables
+    Returns
+    -------
+    ax : an axis containing the raster plot
+    """
+    ax = plt.gca()
+    for ith, trial in enumerate(event_times_list):
+        plt.vlines(trial, ith + .5, ith + 1.5, **kwargs)
+    plt.ylim(.5, len(event_times_list) + .5)
+    return ax
 
 
 def gen_cp(duration, h):
@@ -83,7 +109,16 @@ def gen_stim(ct, rate_l, rate_h, dur):
             left_stream += left_train_high
             right_stream += right_train_low
 
-    return (np.array(left_stream), np.array(right_stream)), state[-1]
+    stim_tuple = (np.array(left_stream), np.array(right_stream))
+    if debug:
+        plt.figure(1)
+        raster(stim_tuple)
+        plt.title('Stimulus (click trains)')
+        plt.xlabel('time')
+        plt.ylabel('ear')
+        plt.show()
+
+    return stim_tuple, state[-1]
 
 
 def evolve_ode(hh, stim, lr, hr, stim_dur):
@@ -97,7 +132,7 @@ def evolve_ode(hh, stim, lr, hr, stim_dur):
     :param stim_dur: stimulus duration in seconds
     :return: state chosen by ideal observer at end of trial
     """
-    dt = 0.00001  # time step in sec
+    dt = 0.0001  # time step in sec
     if lr > 0:
         kappa = np.log(hr / lr)
     else:
@@ -105,6 +140,7 @@ def evolve_ode(hh, stim, lr, hr, stim_dur):
         return None
 
     a = 0  # log posterior odds ratio (accumulated evidence)
+    b = [a]
     time = dt  # absolute time in sec, represents right endpoint of time bin
     left_clicks, right_clicks = stim  # click trains for each ear
 
@@ -181,7 +217,7 @@ def evolve_ode(hh, stim, lr, hr, stim_dur):
                 if time >= next_right:
                     right_click = kappa  # enable upwards evidence jump
                     if left_click is not 0:
-                        print('left and right clicks fell into same bin at time', time)
+                        printdebug('left and right clicks fell into same bin at time' + str(time))
                     # increment upcoming right click, only if this wasn't the last one
                     if idx_right < top_right:
                         idx_right += 1
@@ -200,29 +236,37 @@ def evolve_ode(hh, stim, lr, hr, stim_dur):
             print('trial', trial_nb, 'a is nan at time', time)
             break
         else:
-            a += right_click - left_click
+            if abs(right_click + left_click) > 0.0001:
+                printdebug('jumping by ' + str(right_click + left_click) + ' at time ' + str(time))
+            a += right_click + left_click
+            # b += [a]
 
         time += dt
-
+    if debug:
+        plt.figure(2)
+        plt.plot(b)
+        plt.title('evidence 1 trial')
+        plt.xlabel('time bin')
+        plt.show()
     return np.sign(a)
 
 
 if __name__ == "__main__":
     # set connection to SQLite database
     # name of SQLite db
-    dbname = 'test_3_clicks'
+    dbname = 'test_7_clicks'
     # create connection to SQLite db
     db = dataset.connect('sqlite:///' + dbname + '.db')
     # get handle for specific table of the db
     table = db['perf']
 
     # set parameters
-    num_trials = 2000
+    num_trials = 3000
     rate_low = 14  # in Hz
     rate_high = 40 - rate_low
     trial_duration = 1  # in sec
     hazard_rate = 1  # in Hz
-    list_assumed_h = [.5, 1, 1.5, 2]  # assumed hazard rate in Hz
+    list_assumed_h = np.arange(0.5, 3.1, .1)  # assumed hazard rate in Hz
 
     aa = datetime.datetime.now().replace(microsecond=0)
     for assumed_h in list_assumed_h:
@@ -235,7 +279,7 @@ if __name__ == "__main__":
 
             # generate change points
             change_points = gen_cp(trial_duration, hazard_rate)
-
+            printdebug(change_points)
             # generate stimulus (first element is left stream, second is right stream)
             stimulus, last_state = gen_stim(change_points, rate_low, rate_high, trial_duration)
 

@@ -48,7 +48,7 @@ def plot_clicks_perfs(low_rate, high_rate, data, fignum):
 
     plt.figure(fignum)
     plt.plot(x1, curve1, linewidth=3.0)
-    plt.title('ODE - 2,000 trials per point - low/high rate = 14/26')
+    plt.title('ODE - 3,000 trials per point - low/high rate = 14/26')
     # plt.legend(['snr ' + str(pair1[0]) + '; h ' + str(pair1[1]),
     #             'snr ' + str(pair2[0]) + '; h ' + str(pair2[1])])
     plt.xlabel('assumed hazard rate')
@@ -58,7 +58,7 @@ def plot_clicks_perfs(low_rate, high_rate, data, fignum):
 
 if __name__ == "__main__":
     # name of SQLite db
-    dbname = 'test_3_clicks'
+    dbname = 'test_7_clicks'
     # create connection to SQLite db
     db = dataset.connect('sqlite:///' + dbname + '.db')
     # get handle for specific table of the db
