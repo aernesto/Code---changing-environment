@@ -6,19 +6,19 @@ rng('shuffle')
 
 % global variables
 global rate_low
-    rate_low=14;
+    rate_low=0.01;
     
 global rate_high
-    rate_high=26;
+    rate_high=38;
     
 global kappa
     kappa=log(rate_high/rate_low);
     
 global stimulusLength
-    stimulusLength=5;
+    stimulusLength=.5;
     
 global dt       % time step for time discretization
-    dt=0.5*1e-3;   % 1 msec
+    dt=1e-3;   % 1 msec
     
 global h    % hazard rate, in Hz
     h=4;
@@ -26,7 +26,7 @@ global h    % hazard rate, in Hz
 global obs  % to be computed later
 global N    % to be computer later
 tic
-load('/home/radillo/Git/GitHub/LearningClicksTask/data/ClickTrains_h4_rateHigh26_rateLow14_nTrials1_LONG.mat')
+load('/home/radillo/Git/GitHub/LearningClicksTask/data/ClickTrains_h4_rateHigh38_rateLow001_nTrials1_SHORT.mat')
 % number of distinct trial durations in the data array
 N=size(data,1);
 % get single trial from longest trial duration (3 sec)
@@ -44,8 +44,8 @@ trial = 1; % select first trial for now
 %[lTrain,rTrain]=genClickObs(ct,E);  % this produces the click trains
 
 % if you want to visualize the clicks
-%figure(10) 
-%plotClickTrains(lTrain,rTrain,ct)
+figure(10) 
+plotClickTrains(lTrain,rTrain,ct)
 
 % perform inference
 P=jointPosteriorClicks(lTrain,rTrain);
@@ -53,8 +53,8 @@ toc
 
 % extract portion of stimulus that contains both 01 and 10 observations
 wSize = 8; % sliding window size
-startIdx = 12;
-endIdx = 17;
+startIdx = 1;
+endIdx = wSize;
 found = false;
 % while (endIdx < N) && (~found)
 %     window=obs(startIdx:endIdx,:);
@@ -79,19 +79,19 @@ found = false;
 % figure
 % plotClicksJointPosterior(P,[startIdx,endIdx])
 
-% plot2DClicksJointPosterior(P,[startIdx,endIdx])
+plot2DClicksJointPosterior(P,[startIdx,endIdx])
 
 % compute posterior mean over change point count
 mean_cpc = meanPostCPClicks(P); %mean change point count
 
 % plot posterior mean of change point count
-% figure
-% plot((1:length(mean_cpc))*dt,mean_cpc,'LineWidth',3);
-% title('Posterior mean of change point count')
-% xlabel('sec')
-% ylabel('change point count')
-% ax = gca;
-% ax.FontSize=20;
-savefile='dt05msec2614.mat';
-ttime=(1:length(mean_cpc))*dt;
-save(savefile, 'mean_cpc','ttime')
+figure
+plot((1:length(mean_cpc))*dt,mean_cpc,'LineWidth',3);
+title('Posterior mean of change point count')
+xlabel('sec')
+ylabel('change point count')
+ax = gca;
+ax.FontSize=20;
+% savefile='dt05msec2614.mat';
+% ttime=(1:length(mean_cpc))*dt;
+% save(savefile, 'mean_cpc','ttime')

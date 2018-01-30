@@ -39,9 +39,9 @@ Hmc(1) = Hmc(1)/Fd;
 P(:,:,1)=[Hpc,Hmc];
 
 %hyperparameters for hyperprior over epsilon
-priorPrec=2; %a0+b0=priorPrec and a0/priorPrec=eps
+priorPrec=1001; %a0+b0=priorPrec and a0/priorPrec=eps
 a0=1;%priorPrec*eps;
-b0=1;%priorPrec-a0;
+b0=1000;%priorPrec-a0;
 
 %loop over time
 for j=1:N-1
