@@ -2,6 +2,10 @@ function P=jointPosteriorClicks(lTrain,rTrain)
 % returns joint posterior P 
 
 % global variables
+% global hyperparameters of the gamma prior over h
+global alpha
+global beta
+
 %global kappa     % proxy for SNR
 global stimulusLength
 global dt        % time bin width
@@ -39,9 +43,9 @@ Hmc(1) = Hmc(1)/Fd;
 P(:,:,1)=[Hpc,Hmc];
 
 %hyperparameters for hyperprior over epsilon
-priorPrec=1001; %a0+b0=priorPrec and a0/priorPrec=eps
-a0=1;%priorPrec*eps;
-b0=1000;%priorPrec-a0;
+priorPrec=alpha+beta/dt; %a0+b0=priorPrec and a0/priorPrec=eps
+a0=alpha;%priorPrec*eps;
+b0=beta/dt;%priorPrec-a0;
 
 %loop over time
 for j=1:N-1
