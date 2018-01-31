@@ -6,27 +6,31 @@ rng('shuffle')
 
 % global variables
 global rate_low
-    rate_low=0.01;
+    rate_low=14;
     
 global rate_high
-    rate_high=38;
+    rate_high=26;
     
 global kappa
     kappa=log(rate_high/rate_low);
     
 global stimulusLength
-    stimulusLength=.5;
+    stimulusLength=5;
     
 global dt       % time step for time discretization
     dt=1e-3;   % 1 msec
     
 global h    % hazard rate, in Hz
     h=4;
+global alpha
+    alpha=1;
+global beta
+    beta=1;
     
 global obs  % to be computed later
 global N    % to be computer later
 tic
-load('/home/radillo/Git/GitHub/LearningClicksTask/data/ClickTrains_h4_rateHigh38_rateLow001_nTrials1_SHORT.mat')
+load('/home/radillo/Git/GitHub/LearningClicksTask/data/ClickTrains_h4_rateHigh26_rateLow14_nTrials1_LONG.mat')
 % number of distinct trial durations in the data array
 N=size(data,1);
 % get single trial from longest trial duration (3 sec)
