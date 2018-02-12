@@ -1,0 +1,12 @@
+use following formula for snr:
+snr=(lambdahigh-lambdalow)./sqrt(lambdahigh+lambdalow);
+
+fix lambdalow at 0.01Hz
+fix gamma hyperparameters for h to alpha=beta=1
+repeat the sequence of steps below for snr values of 1, 2, 3, 4
+
+step1: generate a stimulus of 10 msec with a single right click at 5 msec
+step2: run inference on this stimulus
+step3: plot posterior over H+ as function of time, with vertical red bar at
+click time
+step4: conclude on effect of SNR posterior
