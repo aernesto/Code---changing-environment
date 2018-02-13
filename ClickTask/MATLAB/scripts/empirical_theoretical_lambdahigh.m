@@ -5,13 +5,13 @@ clear
 % set multiplot environment
 % subplot(3,1,1)
 %plot empirical curve
-lambdalow=0.01;
-lambdahigh=0.5:.5:30;
+lambdalow=15;
+lambdahigh=18:50;
 snr=(lambdahigh-lambdalow)./sqrt(lambdahigh+lambdalow);
 snr2=1:.5:5;
-theolambda=getlambdahigh(lambdalow, snr, true);
+theolambda=getlambdahigh(lambdalow, snr, false);
 plot(lambdahigh, snr, 'r*', theolambda, snr, 'bo')
-title('error in recovery of lambda high, for lambda low=0.01Hz')
+title('error in recovery of lambda high, for lambda low=100Hz')
 legend('forward','inverse')
 %xlim([0.2,32])
 xlabel('lambdahigh')
