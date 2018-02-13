@@ -1,5 +1,10 @@
+% THIS SCRIPT CONTAINS SEVERAL FUNCTIONS
 function P=jointPosteriorClicks(lTrain,rTrain)
 % returns joint posterior P 
+% it is a matrix with dimensions CPcount x StateNb x TimeSteps
+% in the first dimension, idx 1 corresponds to 0 CP
+% in the second dimension, idx 1 corresponds to H+, idx 2 to H-
+% in the third dimension, idx 1 corresponds to first obs after t=0
 
 % global variables
 % global hyperparameters of the gamma prior over h

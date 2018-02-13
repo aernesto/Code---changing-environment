@@ -17,7 +17,7 @@ else
         eventTime=T(i);
         %the following is a bolean vector lighting up all bins
         %corresponding to times greater than the event time
-        binLog=binTimes > eventTime;
+        binLog=binTimes >= eventTime;
         binIdx=find(binLog,1);  %bin index where event occurred
         bt(binIdx)=1;   %set bin value to 1
     end
