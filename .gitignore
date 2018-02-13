@@ -8,4 +8,6 @@ ClickTask/Python/Untitled.ipynb
 *.db
 *.pickle
 sims_learning_rate/scripts/cross_over/.ipynb_checkpoints/*
+*.fig
+*.png
 ClickTask/Python/Performances/.idea/*
