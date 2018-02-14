@@ -1,0 +1,13 @@
+The script for the CT model showed some flaws regarding completion of
+simulation goal 1.
+I list here the steps planned to pinpoint the flaw.
+
+1. turn the computation of the posterior over state into a function for both DT
+and CT model.
+
+2. compare the quantitative values of the posterior over H+ in both models, for
+the snr=0.5 case. --> conclude on size of discrepancy. If discrepancy seems
+large, redo this step with a smaller DT time step.
+
+3. refix the click time at 5 msec (not 4.9) in the CT model and investigate the
+reason for the NaN values in the snr=4 case.
