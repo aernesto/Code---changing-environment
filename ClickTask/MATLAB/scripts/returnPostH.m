@@ -1,4 +1,4 @@
-function ss=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, gammax,...
+function [ss,qqq]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, gammax,...
 posttimes, priorState, alpha, beta, dt, cptimes)
 % DESCRIPTION:
 % This function evolves the system of jump ODEs for the unknown hazard 
@@ -30,6 +30,7 @@ posttimes, priorState, alpha, beta, dt, cptimes)
 %   None
 
 ss=zeros(2*gammax,length(posttimes));
+qqq=ss;
 coliter=1;
 % maximum value of the indices for each train vector
 lmax=length(lTrain);
@@ -146,6 +147,7 @@ while time<T
         %disp(t_new)
         %disp(sum(marginalOverGamma))
         ss(:,coliter)=vector;
+        qqq(:,coliter)=[yp_new;ym_new];
         coliter=coliter+1;
                
         %update index of next reporting time

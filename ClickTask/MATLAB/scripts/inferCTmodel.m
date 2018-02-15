@@ -67,7 +67,7 @@ ax2.FontSize=20;
 
 for snr=[4]
     rateHigh=getlambdahigh(rateLow, snr, true);
-    jointPost=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
+    [jointPost,unnorm]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
     gamma_max, posttimes, priorState, alpha, beta, dt, cptimes);
 
     ax1=subplot(2,2,1);
@@ -108,4 +108,7 @@ for snr=[4]
     xlabel('msec')
     title('H-, a=1')
     ax4.FontSize=20;
+    
+    %%%%%%%%%%%%%%%%%%%5
+    % NOW PLOT SUBPLOTS FOR yp and ym!!!
 end
