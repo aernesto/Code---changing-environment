@@ -29,7 +29,7 @@ posttimes, priorState, alpha, beta, dt, cptimes)
 % REQUIRED SCRIPTS:
 %   None
 
-ss=zeros(2,length(posttimes));
+ss=zeros(2*gammax,length(posttimes));
 coliter=1;
 % maximum value of the indices for each train vector
 lmax=length(lTrain);
@@ -142,7 +142,7 @@ while time<T
         %true posterior
         xp=yp_new-K;
         xm=ym_new-K;
-        vector=[sum(exp(xp));sum(exp(xm))];
+        vector=[exp(xp);exp(xm)];
         %disp(t_new)
         %disp(sum(marginalOverGamma))
         ss(:,coliter)=vector;
