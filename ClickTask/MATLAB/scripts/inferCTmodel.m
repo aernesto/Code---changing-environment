@@ -40,69 +40,23 @@ posttimes=0.001:0.00001:T;
 posttimes(end)=T-2*dt;
 
 fig=figure(1); 
+hax=axes;
 SP=rTrain(1)*1000; %right click time in msec
-ax1=subplot(1,2,1);
 hold on
-title('post H+')
-ylabel('prob(H+)')
+title('posterior prob of H+ as fcn of time')
+ylabel('posterior prob(H+)')
 xlabel('msec')
 xlim([0,11])
-ylim([0,1.05])
-line([SP SP],get(ax1,'YLim'),'Color',[1 0 0], 'LineWidth',2)
-line(get(ax1,'XLim'),[0.5,.5],'Color',[0 0 0], 'LineWidth',1)
-line(get(ax1,'XLim'),[1,1],'Color',[0 0 0], 'LineWidth',1)
-ax1.FontSize=20;
+ylim([0.49,1.05])
+line([SP SP],get(hax,'YLim'),'Color',[1 0 0], 'LineWidth',2)
+hax.FontSize=20;
 
-ax2=subplot(1,2,2);
-hold on 
-title('post H-')
-ylabel('prob(H-)')
-xlabel('msec')
-xlim([0,11])
-ylim([0,1.05])
-line([SP SP],get(ax2,'YLim'),'Color',[1 0 0], 'LineWidth',2)
-line(get(ax2,'XLim'),[0.5,.5],'Color',[0 0 0], 'LineWidth',1)
-line(get(ax2,'XLim'),[1,1],'Color',[0 0 0], 'LineWidth',1)
-ax2.FontSize=20;
-
-for snr=[4]
+for snr=[.5,1,2,4]
     rateHigh=getlambdahigh(rateLow, snr, true);
     [jointPost,unnorm]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
     gamma_max, posttimes, priorState, alpha, beta, dt, cptimes);
-
-    ax1=subplot(2,2,1);
-    ax1.FontSize=20;
-    hold on
-    plot(1000*(posttimes), jointPost(1,:),'-b','MarkerSize',10,'LineWidth',2)
-    %ylabel('posterior prob')
-    title('H+, a=0')
-    
-    ax2=subplot(2,2,2);
-    ax2.FontSize=20;
-    hold on
-    plot(1000*(posttimes), jointPost(gamma_max+1,:),'-r','MarkerSize',10,...
-        'LineWidth',2)   
-    title('H-, a=0')
-   
-    ax3=subplot(2,2,3);
-    plot(1000*(posttimes), jointPost(2,:),'-','LineWidth', ...
-        3, 'MarkerSize',8)
-    title('H+, a=1')
-    xlim([0,10])
-    ylim([0,1.05])
-    %ylabel('posterior prob')
-    xlabel('msec')
-    ax3.FontSize=20;
-    
-    ax4=subplot(2,2,4);
-    plot(1000*(posttimes), jointPost(gamma_max+2,:),'-r','LineWidth', ...
-        3, 'MarkerSize',8)
-    xlim([0,10])
-    ylim([0,1.05])
-    xlabel('msec')
-    title('H-, a=1')
-    ax4.FontSize=20;
-    
-    %%%%%%%%%%%%%%%%%%%5
-    % NOW PLOT SUBPLOTS FOR yp and ym!!!
+    plot(1000*posttimes, sum(jointPost(1:gamma_max,:),1),'LineWidth',2)
 end
+legend('click time','snr=0.5','snr=1','snr=2','snr=4')
+line(get(hax,'XLim'),[0.5,.5],'Color',[0 0 0], 'LineWidth',1)
+line(get(hax,'XLim'),[1,1],'Color',[0 0 0], 'LineWidth',1)
