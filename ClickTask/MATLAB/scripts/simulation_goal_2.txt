@@ -1,0 +1,9 @@
+Do the following for both DT and CT models
+
+for snr=1:4
+for prior variance over h=1:3
+plot the mean cp count  with stdev error bars
+for a 10msec stimulus with single right click at 5msec.
+
+Conclude on effect of SNR and prior variance on posterior marginal over CP
+count.
