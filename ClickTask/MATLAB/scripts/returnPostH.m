@@ -155,8 +155,8 @@ while time<T
             idnxtposttime = idnxtposttime + 1;
             nxtposttime = posttimes(idnxtposttime);
         end
-        yp_old = xp;
-        ym_old = xm;
+        yp_old = yp_new;%xp;
+        ym_old = ym_new;%xm;
     else
         yp_old = yp_new;
         ym_old = ym_new;
