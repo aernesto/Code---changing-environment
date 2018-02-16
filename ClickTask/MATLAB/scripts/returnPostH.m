@@ -1,4 +1,4 @@
-function [ss,qqq]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, gammax,...
+function [ss,qqq,priorGamma]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, gammax,...
 posttimes, priorState, alpha, beta, dt, cptimes)
 % DESCRIPTION:
 % This function evolves the system of jump ODEs for the unknown hazard 
@@ -59,7 +59,13 @@ gammaValues=0:gammax-1;
 % Poisson prior over change point counts
 %priorGamma=((alpha.^gammaValues)*exp(-alpha))./factorial(gammaValues);
 massOn0=.9999;
-priorGamma=[massOn0,ones(1,gammax-1)*(1-massOn0)/gammax];
+massAf0=1-massOn0;
+% apply exponential kernel to nodes with gamma>0
+nodes=exp(-(1:gammax-1));
+normC=massAf0/sum(nodes);
+
+priorGamma=[massOn0,nodes*normC];
+
 yp_old=log(priorState(1)*priorGamma)';
 ym_old=log(priorState(2)*priorGamma)';
 time=0;

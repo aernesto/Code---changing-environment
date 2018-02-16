@@ -18,7 +18,7 @@ rateLow=0.01;
 % time step for forward Euler, in sec
 dt=1/1000000;
 % max allowed change point count
-gamma_max=2;
+gamma_max=20;
 % hyperparameters for Gamma dist over hazard rate
 alpha=1;
 priorState=[.5,.5];
@@ -39,10 +39,12 @@ posttimes=0.0001:0.00001:T;
 posttimes(end)=T-2*dt;
 msect=1000*posttimes;
 
-fig=figure(1);  
+fig1=figure(1);  
+%fig2=figure(2);
 SP=rTrain(1)*1000; %right click time in msec
 for priorVar=1:3
     for snr=1:4
+        figure(fig1)
         i=sub2ind([4,3],snr,priorVar);
         ax=subplot(3,4,i);
         grid on
@@ -50,8 +52,9 @@ for priorVar=1:3
         beta = alpha / sqrt(priorVar);
         rateHigh=getlambdahigh(rateLow, snr, true);
         % perform inference
-        [jointPost,~]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
+        [jointPost,~,priorGamma]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
     gamma_max, posttimes, priorState, alpha, beta, dt, cptimes);
+                
         %compute marginal over CP count
         marginalCPcount=jointPost(1:gamma_max,:)+...
             jointPost(gamma_max+1:end,:); % dim = CPcount x TimeSteps
@@ -77,6 +80,10 @@ for priorVar=1:3
         end
         %ylim([0,0.04])
         ax.FontSize=20;
+        
+        %figure(fig2)
+        %ax2=subplot(3,4,i)
+        %bar(priorGamma)
     end
 end
 
