@@ -18,7 +18,7 @@ rateLow=0.01;
 % time step for forward Euler, in sec
 dt=1/1000000;
 % max allowed change point count
-gamma_max=4;
+gamma_max=2;
 % hyperparameters for Gamma dist over hazard rate
 alpha=1;
 priorState=[.5,.5];
