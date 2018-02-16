@@ -10,7 +10,7 @@ function bt=binTrain(T,dt,totalTime)
 if mod(totalTime,dt)
     error('the bin width must divide total time')
 else
-    L=totalTime/dt; %total number of bins
+    L=int64(totalTime/dt); %total number of bins
     binTimes=(1:L)*dt; %times in sec of right-endpoints of bins
     bt=zeros(L,1);  %binary vector with as many entries as bins.
     for i=1:length(T) %loop over events times in the train
