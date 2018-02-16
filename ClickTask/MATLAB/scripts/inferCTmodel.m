@@ -34,7 +34,7 @@ cptimes=0.004;
 
 %% call ODE function
 %posttimes=1:50;
-posttimes=0.001:0.00001:T;
+posttimes=0.0001:0.00001:T;
 %posttimes=[0.1:0.1:.9, posttimes];
 posttimes(end)=T-2*dt;
 msect=1000*posttimes;
@@ -58,12 +58,17 @@ for priorVar=1:3
         meanCPcount=(0:gamma_max-1)*marginalCPcount;
         stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
         % plot marginal
-        plot(msect, meanCPcount,'-b',...
+        mylines=plot(msect, meanCPcount,'-b',...
              msect,meanCPcount+stdevCPcount,'-k',...
              msect,max(meanCPcount-stdevCPcount,0),'-k',...
-            'LineWidth', 3)
-        line([SP,SP],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2)
+            'LineWidth', 3);
+        vertline=line([SP,SP],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2);
         title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
+        if snr==1 & priorVar==1
+            legend([mylines(1:2);vertline],...
+                'mean','1 stdev','click time','Location','NorthWest')
+            legend BOXOFF
+        end
         if snr==1 
             ylabel('CP count')
         end
