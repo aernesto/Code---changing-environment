@@ -58,7 +58,7 @@ end
 gammaValues=0:gammax-1;
 % Poisson prior over change point counts
 %priorGamma=((alpha.^gammaValues)*exp(-alpha))./factorial(gammaValues);
-massOn0=.99;
+massOn0=.9999;
 priorGamma=[massOn0,ones(1,gammax-1)*(1-massOn0)/gammax];
 yp_old=log(priorState(1)*priorGamma)';
 ym_old=log(priorState(2)*priorGamma)';
