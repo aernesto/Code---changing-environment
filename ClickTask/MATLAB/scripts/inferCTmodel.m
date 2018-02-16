@@ -56,13 +56,13 @@ for priorVar=1:3
         marginalCPcount=jointPost(1:gamma_max,:)+...
             jointPost(gamma_max+1:end,:); % dim = CPcount x TimeSteps
         meanCPcount=(0:gamma_max-1)*marginalCPcount;
-        stdevCPcount=((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2;
+        stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
         % plot marginal
         plot(msect, meanCPcount,'-b',...
              msect,meanCPcount+stdevCPcount,'-k',...
              msect,max(meanCPcount-stdevCPcount,0),'-k',...
             'LineWidth', 3)
-        line([SP,SP],[0,0.04],'Color',[4,2,3]/4,'LineWidth',2)
+        line([SP,SP],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2)
         title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
         if snr==1 
             ylabel('CP count')

@@ -48,13 +48,13 @@ for priorVar=1:3
         %compute marginal over CP count
         marginalCPcount=squeeze(sum(P,2)); % dim = CPcount x TimeSteps
         meanCPcount=(0:size(P,1)-1)*marginalCPcount;
-        stdevCPcount=((0:size(P,1)-1).^2)*marginalCPcount-meanCPcount.^2;
+        stdevCPcount=sqrt(((0:size(P,1)-1).^2)*marginalCPcount-meanCPcount.^2);
         % plot marginal
         plot(msect, meanCPcount,'-b',...
              msect,meanCPcount+stdevCPcount,'-k',...
              msect,max(meanCPcount-stdevCPcount,0),'-k',...
             'LineWidth', 3)
-        line([SP,SP],[0,0.04],'Color',[4,2,3]/4,'LineWidth',2)
+        line([SP,SP],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2)
         title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
         if snr==1 
             ylabel('CP count')
@@ -62,7 +62,7 @@ for priorVar=1:3
         if priorVar==3
             xlabel('msec')
         end
-        ylim([0,0.04])
+        %ylim([0,0.04])
         ax.FontSize=20;
     end
 end
