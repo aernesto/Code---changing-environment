@@ -29,15 +29,16 @@ global beta
 global obs  % to be computed later
 global N    % to be computer later
 %create artificial stimulus
-lTrain=[];%.006;
-rTrain=[.005];           
+lTrain=[.006];%.006;
+rTrain=[.004];           
 ct=0.004;
 
 fig=figure(1);  
 SP=rTrain(1)*1000; %right click time in msec
 for priorVar=1:3
-    for snr=1:4
-        i=sub2ind([4,3],snr,priorVar);
+    for iii=1:4
+        snr=iii+5;
+        i=sub2ind([4,3],iii,priorVar);
         ax=subplot(3,4,i);
         grid on
         hold on

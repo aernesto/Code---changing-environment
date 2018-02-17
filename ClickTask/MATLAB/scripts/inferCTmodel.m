@@ -27,8 +27,8 @@ priorState=[.5,.5];
 T=0.010; %10 msec
 
 %% generate stimulus
-lTrain=[];
-rTrain=0.005; % right before 5 msec
+lTrain=[0.006];
+rTrain=[0.004]; % right before 5 msec
 cptimes=0.004;
 
 
@@ -43,8 +43,9 @@ expRate=1; %exponential decay to apply to initial mass on a at t=0
 fig=figure(1);  
 SP=rTrain(1)*1000; %right click time in msec
 for priorVar=1:3
-    for snr=1:4
-        i=sub2ind([4,3],snr,priorVar);
+    for iii=1:4
+        snr=iii+5;
+        i=sub2ind([4,3],iii,priorVar);
         ax=subplot(3,4,i);
         grid on
         hold on
