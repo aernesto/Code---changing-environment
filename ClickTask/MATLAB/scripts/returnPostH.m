@@ -62,9 +62,12 @@ massOn0=.9999;
 massAf0=1-massOn0;
 % apply exponential kernel to nodes with gamma>0
 nodes=expRate*exp(-expRate*(1:gammax-1));
+nodes(nodes==0)=realmin;
 normC=massAf0/sum(nodes);
 
 priorGamma=[massOn0,nodes*normC];
+priorGamma(priorGamma==0)=realmin;
+priorGamma=priorGamma/sum(priorGamma);
 
 yp_old=log(priorState(1)*priorGamma)';
 ym_old=log(priorState(2)*priorGamma)';
