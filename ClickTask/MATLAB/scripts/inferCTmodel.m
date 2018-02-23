@@ -13,23 +13,23 @@
 clear
 %% set parameters
 % click rates in Hz
-rateLow=0.01;
+rateLow=10;
 
 % time step for forward Euler, in sec
 dt=1/1000000;
 % max allowed change point count
 gamma_max=20;
 % hyperparameters for Gamma dist over hazard rate
-alpha=1;
+m=1; % mode of prior on h
 priorState=[.5,.5];
 
 %trial duration (sec)
-T=0.010; %10 msec
+T=0.500; %500 msec
 
 %% generate stimulus
-lTrain=[0.006];
-rTrain=[0.004]; % right before 5 msec
-cptimes=0.004;
+lTrain=[0.100];
+rTrain=[0.200,0.300]; % right before 5 msec
+cptimes=0.150;
 
 
 %% call ODE function
@@ -42,14 +42,19 @@ msect=1000*posttimes;
 expRate=1; %exponential decay to apply to initial mass on a at t=0
 fig=figure(1);  
 SP=rTrain(1)*1000; %right click time in msec
-for priorVar=1:3
+varlist=[.1,2,5];
+for priorVar_idx=1:length(varlist)
+    priorVar=varlist(priorVar_idx);
     for iii=1:4
         snr=iii+5;
-        i=sub2ind([4,3],iii,priorVar);
+        i=sub2ind([4,3],iii,priorVar_idx);
         ax=subplot(3,4,i);
         grid on
         hold on
-        beta = alpha / sqrt(priorVar);
+        v=priorVar; % prior variance
+        beta = m / (2 * v) + sqrt(m^2 / (v^2) + 4 / v) / 2;  
+        alpha = m * beta + 1;
+
         rateHigh=getlambdahigh(rateLow, snr, true);
         % perform inference
         [jointPost,~]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
