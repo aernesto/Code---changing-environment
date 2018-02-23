@@ -1,4 +1,4 @@
-function [ss,qqq,priorGamma]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, gammax,...
+function [ss,qqq,priorGamma,ttt,sss,uuu]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, gammax,...
 posttimes, priorState, alpha, beta, dt, cptimes, expRate)
 % DESCRIPTION:
 % This function evolves the system of jump ODEs for the unknown hazard 
@@ -149,6 +149,20 @@ while time<T
         %true posterior
         xp=yp_new-K;
         xm=ym_new-K;
+        
+        %posterior variance over h
+        v1=(gammaValues'+alpha)/(t_new+beta);
+        v2=(gammaValues'+alpha+1)/(t_new+beta);
+        post_mean_h(idnxtposttime)=sum((exp(xp)+exp(xm)).*v1);
+        post_var_h(idnxtposttime)=sum((exp(xp)+exp(xm)).*v1.*v2)-...
+            sum((exp(xp)+exp(xm)).*v1)^2;
+        
+        %report lower bound on posterior variance
+        %(alpha+n)/(beta+t)^2
+        ncp = sum(cptimes<t_new); % number of true change points by report time
+        lbvar(idnxtposttime)=(alpha+ncp)/(beta+t_new)^2;
+        
+        
         vector=[exp(xp);exp(xm)];
         %disp(t_new)
         %disp(sum(marginalOverGamma))
@@ -173,4 +187,7 @@ while time<T
     % reinitialize for next iteration    
     time = t_new;
 end
+ttt=post_mean_h;
+sss=post_var_h;
+uuu=lbvar;
 end
