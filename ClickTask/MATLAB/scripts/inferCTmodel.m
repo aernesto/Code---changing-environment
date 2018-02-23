@@ -11,6 +11,7 @@
 % getlambdahigh.m
 
 clear
+tic
 %% set parameters
 % click rates in Hz
 rateLow=10;
@@ -24,7 +25,7 @@ m=1; % mode of prior on h
 priorState=[.5,.5];
 
 %trial duration (sec)
-T=0.500; %500 msec
+T=0.400; %400 msec
 
 %% generate stimulus
 lTrain=[0.100];
@@ -41,14 +42,17 @@ msect=1000*posttimes;
 
 expRate=1; %exponential decay to apply to initial mass on a at t=0
 fig=figure(1);  
-SP=rTrain(1)*1000; %right click time in msec
-varlist=[.1,2,5];
-for priorVar_idx=1:length(varlist)
+SP=[lTrain,rTrain]*1000; %click times in msec
+varlist=[.1,5];
+nv=length(varlist);
+snrlist=[1,4];
+ns=length(snrlist);
+for priorVar_idx=1:nv
     priorVar=varlist(priorVar_idx);
-    for iii=1:4
-        snr=iii+5;
-        i=sub2ind([4,3],iii,priorVar_idx);
-        ax=subplot(3,4,i);
+    for iii=1:ns
+        snr=snrlist(iii);
+        i=sub2ind([nv,ns],iii,priorVar_idx);
+        ax=subplot(nv,ns,i);
         grid on
         hold on
         v=priorVar; % prior variance
@@ -69,24 +73,29 @@ for priorVar_idx=1:length(varlist)
              msect,meanCPcount+stdevCPcount,'-k',...
              msect,max(meanCPcount-stdevCPcount,0),'-k',...
             'LineWidth', 3);
-        vertline=line([SP,SP],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2);
+        %vertical lines for click times
+        vl1=line([SP(1),SP(1)],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2,'LineStyle','--');
+        vl2=line([SP(2),SP(2)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
+        vl3=line([SP(3),SP(3)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
         title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
-        if snr==1 & priorVar==1
-            legend([mylines(1:2);vertline],...
-                'mean','1 stdev','click time','Location','NorthWest')
+        if snr==snrlist(1) & priorVar==varlist(1)
+            legend([mylines(1:2);vl1;vl2],...
+                'mean','1 stdev','left click',...
+                'right click',...
+                'Location','NorthWest')
             legend BOXOFF
         end
-        if snr==1 
+        if snr==snrlist(1) 
             ylabel('CP count')
         end
-        if priorVar==3
+        if priorVar==varlist(end)
             xlabel('msec')
         end
         %ylim([0,0.04])
         ax.FontSize=20;
     end
 end
-
+toc
 
 
 
