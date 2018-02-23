@@ -63,35 +63,35 @@ for priorVar_idx=1:nv
         % perform inference
         [jointPost,~]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
     gamma_max, posttimes, priorState, alpha, beta, dt, cptimes, expRate);
+        %compute marginal over state H+
+        postHp=sum(jointPost(1:gamma_max,:),1);
         %compute marginal over CP count
-        marginalCPcount=jointPost(1:gamma_max,:)+...
-            jointPost(gamma_max+1:end,:); % dim = CPcount x TimeSteps
-        meanCPcount=(0:gamma_max-1)*marginalCPcount;
-        stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
+        %marginalCPcount=jointPost(1:gamma_max,:)+...
+        %    jointPost(gamma_max+1:end,:); % dim = CPcount x TimeSteps
+        %meanCPcount=(0:gamma_max-1)*marginalCPcount;
+        %stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
         % plot marginal
-        mylines=plot(msect, meanCPcount,'-b',...
-             msect,meanCPcount+stdevCPcount,'-k',...
-             msect,max(meanCPcount-stdevCPcount,0),'-k',...
+        mylines=plot(msect, postHp,'-b',...
             'LineWidth', 3);
+        ax.YLim=[0,1];
         %vertical lines for click times
         vl1=line([SP(1),SP(1)],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2,'LineStyle','--');
         vl2=line([SP(2),SP(2)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
         vl3=line([SP(3),SP(3)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
         title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
         if snr==snrlist(1) & priorVar==varlist(1)
-            legend([mylines(1:2);vl1;vl2],...
-                'mean','1 stdev','left click',...
+            legend([mylines(1);vl1;vl2],...
+                'P(H+)','left click',...
                 'right click',...
                 'Location','NorthWest')
             legend BOXOFF
         end
         if snr==snrlist(1) 
-            ylabel('CP count')
+            ylabel('Posterior H+')
         end
         if priorVar==varlist(end)
             xlabel('msec')
         end
-        %ylim([0,0.04])
         ax.FontSize=20;
     end
 end
