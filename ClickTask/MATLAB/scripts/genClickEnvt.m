@@ -1,11 +1,8 @@
-function [ct,E]=genClickEnvt()
+function [ct,E]=genClickEnvt(stimulusLength,h)
 %returns two column vectors: 
     %ct contains the change point times
     %E of length length(ct)+1, contains the states S+ and S-, as 1 and 0
     %respectively.
-
-global stimulusLength
-global h
 
 ct=genPoissonTrain(h, stimulusLength); % generate change point times
 

@@ -1,4 +1,4 @@
-function [lTrain,rTrain]=genClickObs(ct,E)
+function [lTrain,rTrain]=genClickObs(ct,E,rate_low,rate_high,stimulusLength)
 % generates the two trains of clicks that the rat hears
 %   ct is a column vector with change point times
 %   E is a column vector of length length(ct)+1 with the state S+/- of the
@@ -14,9 +14,6 @@ if ~((length(ct) + 1) == length(E))
 end
 
 % global variables
-global rate_low
-global rate_high
-global stimulusLength
 
 
 nTrains=length(E); % number of trains to stack, for each ear

@@ -25,12 +25,12 @@ m=1; % mode of prior on h
 priorState=[.5,.5];
 
 %trial duration (sec)
-T=0.400; %400 msec
+T=4.000; %4000 msec
 
 %% generate stimulus
-lTrain=[0.100];
-rTrain=[0.200,0.300]; % right before 5 msec
-cptimes=0.150;
+%lTrain=[0.100];
+%rTrain=[0.200,0.300]; % right before 5 msec
+%cptimes=0.150;
 
 
 %% call ODE function
@@ -43,7 +43,7 @@ msect=1000*posttimes;
 expRate=1; %exponential decay to apply to initial mass on a at t=0
 fig2=figure(2);
 fig1=figure(1);
-SP=[lTrain,rTrain]*1000; %click times in msec
+%SP=[lTrain,rTrain]*1000; %click times in msec
 varlist=[.1,5];
 nv=length(varlist);
 snrlist=[1,4];
@@ -52,13 +52,23 @@ for priorVar_idx=1:nv
     priorVar=varlist(priorVar_idx);
     for iii=1:ns
         snr=snrlist(iii);
+        % generate stimulus
+        rateHigh=getlambdahigh(rateLow, snr, true);
+        data=genStimBank2(1,1,rateHigh,rateLow,T);
+        % number of distinct trial durations in the data array
+        N=size(data,1);
+        % get single trial from longest trial duration (3 sec)
+        clicksCell=data{N,1};
+        % total number of available trials for this trial duration
+        nTrials = length(clicksCell);
+        trial = 1; % select first trial for now
+        [lTrain,rTrain, cptimes]=clicksCell{trial, 1:3};
         i=sub2ind([nv,ns],iii,priorVar_idx);
         
         v=priorVar; % prior variance
         beta = m / (2 * v) + sqrt(m^2 / (v^2) + 4 / v) / 2;
         alpha = m * beta + 1;
         
-        rateHigh=getlambdahigh(rateLow, snr, true);
         % perform inference
         [~,~,~,means,vars,lbvar]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
             gamma_max, posttimes, priorState, alpha, beta, dt, cptimes, expRate);
