@@ -21,16 +21,16 @@ dt=1/1000000;
 % max allowed change point count
 gamma_max=20;
 % hyperparameters for Gamma dist over hazard rate
-m=.5; % mean of prior on h
+m=1.5; % mean of prior on h
 priorState=[.5,.5];
 
 %trial duration (sec)
-T=4.000; %4000 msec
+T=0.400; %400 msec
 
 %% generate stimulus
-%lTrain=[0.100];
-%rTrain=[0.200,0.300]; % right before 5 msec
-%cptimes=0.150;
+lTrain=[0.100];
+rTrain=[0.200,0.300]; % right before 5 msec
+cptimes=0.150;
 
 
 %% call ODE function
@@ -41,9 +41,10 @@ posttimes(end)=T-2*dt;
 msect=1000*posttimes;
 
 expRate=1; %exponential decay to apply to initial mass on a at t=0
-fig2=figure(2);
-fig1=figure(1);
-%SP=[lTrain,rTrain]*1000; %click times in msec
+fig=figure(1);  
+SP=[lTrain,rTrain]*1000; %click times in msec
+%fig2=figure(2);
+%fig1=figure(1);
 varlist=[.1,5];
 nv=length(varlist);
 snrlist=[1,4];
@@ -54,17 +55,19 @@ for priorVar_idx=1:nv
         snr=snrlist(iii);
         % generate stimulus
         rateHigh=getlambdahigh(rateLow, snr, true);
-        data=genStimBank2(1,1,rateHigh,rateLow,T);
+        %data=genStimBank2(1,1,rateHigh,rateLow,T);
         % number of distinct trial durations in the data array
-        N=size(data,1);
+        %N=size(data,1);
         % get single trial from longest trial duration (3 sec)
-        clicksCell=data{N,1};
+        %clicksCell=data{N,1};
         % total number of available trials for this trial duration
-        nTrials = length(clicksCell);
-        trial = 1; % select first trial for now
-        [lTrain,rTrain, cptimes]=clicksCell{trial, 1:3};
+        %nTrials = length(clicksCell);
+        %trial = 1; % select first trial for now
+        %[lTrain,rTrain, cptimes]=clicksCell{trial, 1:3};
         i=sub2ind([nv,ns],iii,priorVar_idx);
-        
+        ax=subplot(nv,ns,i);
+        grid on
+        hold on
         v=priorVar; % prior variance
         beta=m/v;
         alpha=beta*m;
@@ -73,80 +76,80 @@ for priorVar_idx=1:nv
         %alpha = m * beta + 1;
         
         % perform inference
-        [~,~,~,means,vars,lbvar]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
+        [jointPost,~,~,~,~,~]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
             gamma_max, posttimes, priorState, alpha, beta, dt, cptimes, expRate);
         %compute marginal over state H+
-        %postHp=sum(jointPost(1:gamma_max,:),1);
+        postHp=sum(jointPost(1:gamma_max,:),1);
         %compute marginal over CP count
-        %marginalCPcount=jointPost(1:gamma_max,:)+...
-        %    jointPost(gamma_max+1:end,:); % dim = CPcount x TimeSteps
-        %meanCPcount=(0:gamma_max-1)*marginalCPcount;
-        %stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
-        %         % plot marginal
-        %         mylines=plot(msect, postHp,'-b',...
-        %             'LineWidth', 3);
-        %         ax.YLim=[0,1];
-        %         %vertical lines for click times
-        %         vl1=line([SP(1),SP(1)],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2,'LineStyle','--');
-        %         vl2=line([SP(2),SP(2)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
-        %         vl3=line([SP(3),SP(3)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
-        %         title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
-        %         if snr==snrlist(1) & priorVar==varlist(1)
-        %             legend([mylines(1);vl1;vl2],...
-        %                 'P(H+)','left click',...
-        %                 'right click',...
-        %                 'Location','NorthWest')
-        %             legend BOXOFF
-        %         end
-        %         if snr==snrlist(1)
-        %             ylabel('Posterior H+')
-        %         end
-        %         if priorVar==varlist(end)
-        %             xlabel('msec')
-        %         end
-        %         ax.FontSize=20;
+        marginalCPcount=jointPost(1:gamma_max,:)+...
+            jointPost(gamma_max+1:end,:); % dim = CPcount x TimeSteps
+        meanCPcount=(0:gamma_max-1)*marginalCPcount;
+        stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
+        % plot marginal
+        mylines=plot(msect, postHp,'-b',...
+            'LineWidth', 3);
+        ax.YLim=[0,1];
+        %vertical lines for click times
+        vl1=line([SP(1),SP(1)],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2,'LineStyle','--');
+        vl2=line([SP(2),SP(2)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
+        vl3=line([SP(3),SP(3)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
+        title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
+        if snr==snrlist(1) & priorVar==varlist(1)
+            legend([mylines(1);vl1;vl2],...
+                'P(H+)','left click',...
+                'right click',...
+                'Location','NorthWest')
+            legend BOXOFF
+        end
+        if snr==snrlist(1)
+            ylabel('Posterior H+')
+        end
+        if priorVar==varlist(end)
+            xlabel('msec')
+        end
+        ax.FontSize=20;
         
         % append prior values for time point t=0
-        means=[alpha/beta,means];
-        vars=[alpha/beta^2,vars];
-        lbvar=[alpha/beta^2, lbvar];
-        posttimes_inloop=[0,posttimes];
+        %means=[alpha/beta,means];
+        %vars=[alpha/beta^2,vars];
+        %lbvar=[alpha/beta^2, lbvar];
+        %posttimes_inloop=[0,posttimes];
         
-        figure(fig1)
-        ax=subplot(nv,ns,i);
-        grid on
-        hold on
-        %plot for posterior mean over h
-        plot(posttimes_inloop,means,'-b',[0,T],[1,1],'-r','LineWidth',3)
-        xlim([0,T])
-        ylim([0,max(means)+.5])
-        %vertical lines for CP times
-        for lll=1:length(cptimes)
-            line([cptimes(lll),cptimes(lll)],...
-                get(ax,'ylim'),'Color',[0,0,0],...
-                'LineWidth',2,'LineStyle','--');
-        end
-        ylabel('posterior mean','FontSize',18)
-        title(['mean h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',18)
-        legend('learned','true','change points')
-        %plot for posterior variance over h
-        figure(fig2)
-        ax=subplot(nv,ns,i);
-        grid on
-        hold on
-        plot(posttimes_inloop,vars,'-b',[0,cptimes'], lbvar,'*r','LineWidth',3);
-        xlim([0,T])
-        ylim([0,max(abs(vars))+.5]);
-        %vertical lines for CP times
+%         figure(fig1)
+%         ax=subplot(nv,ns,i);
+%         grid on
+%         hold on
+%         %plot for posterior mean over h
+%         plot(posttimes_inloop,means,'-b',[0,T],[1,1],'-r','LineWidth',3)
+%         xlim([0,T])
+%         ylim([0,max(means)+.5])
+%         %vertical lines for CP times
 %         for lll=1:length(cptimes)
 %             line([cptimes(lll),cptimes(lll)],...
 %                 get(ax,'ylim'),'Color',[0,0,0],...
 %                 'LineWidth',2,'LineStyle','--');
 %         end
-        xlabel('time','FontSize',18)
-        ylabel('posterior var','FontSize',18)
-        legend('learned','explicit change points')
-        title(['var h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',18)
+%         ylabel('posterior mean','FontSize',18)
+%         title(['mean h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',18)
+%         legend('learned','true','change points')
+%         %plot for posterior variance over h
+%         figure(fig2)
+%         ax=subplot(nv,ns,i);
+%         grid on
+%         hold on
+%         plot(posttimes_inloop,vars,'-b',[0,cptimes'], lbvar,'*r','LineWidth',3);
+%         xlim([0,T])
+%         ylim([0,max(abs(vars))+.5]);
+%         %vertical lines for CP times
+% %         for lll=1:length(cptimes)
+% %             line([cptimes(lll),cptimes(lll)],...
+% %                 get(ax,'ylim'),'Color',[0,0,0],...
+% %                 'LineWidth',2,'LineStyle','--');
+% %         end
+%         xlabel('time','FontSize',18)
+%         ylabel('posterior var','FontSize',18)
+%         legend('learned','explicit change points')
+%         title(['var h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',18)
     end
 end
 toc
