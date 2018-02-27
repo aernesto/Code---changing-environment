@@ -1,4 +1,5 @@
 function t=genPoissonTrain(rate,timeLength)
+rng('shuffle')
 %generates poisson train of timeLength seconds with rate rate in Hz, 
 %using the Gillespie algorithm.
 t=zeros(ceil(10*rate*timeLength),1); %pre-allocate ten times the mean array size 

@@ -118,35 +118,35 @@ for priorVar_idx=1:nv
         hold on
         %plot for posterior mean over h
         plot(posttimes_inloop,means,'-b',[0,T],[1,1],'-r','LineWidth',3)
+        xlim([0,T])
+        ylim([0,max(means)+.5])
         %vertical lines for CP times
         for lll=1:length(cptimes)
             line([cptimes(lll),cptimes(lll)],...
-                get(ax,'ylim'),'Color',[4,2,3]/4,...
+                get(ax,'ylim'),'Color',[0,0,0],...
                 'LineWidth',2,'LineStyle','--');
         end
-        ylabel('posterior mean','FontSize',14)
-        xlim([0,T])
-        ylim([0,max(means)+.5])
-        title(['mean h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',14)
+        ylabel('posterior mean','FontSize',18)
+        title(['mean h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',18)
         legend('learned','true','change points')
         %plot for posterior variance over h
         figure(fig2)
         ax=subplot(nv,ns,i);
         grid on
         hold on
-        plot(posttimes_inloop,vars,'-b',posttimes_inloop, lbvar,'-r','LineWidth',3);
-        %vertical lines for CP times
-        for lll=1:length(cptimes)
-            line([cptimes(lll),cptimes(lll)],...
-                get(ax,'ylim'),'Color',[4,2,3]/4,...
-                'LineWidth',2,'LineStyle','--');
-        end
-        xlabel('time','FontSize',14)
-        ylabel('posterior var','FontSize',14)
-        legend('learned','theor. low bd','change points')
+        plot(posttimes_inloop,vars,'-b',[0,cptimes'], lbvar,'*r','LineWidth',3);
         xlim([0,T])
         ylim([0,max(abs(vars))+.5]);
-        title(['var h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',14)
+        %vertical lines for CP times
+%         for lll=1:length(cptimes)
+%             line([cptimes(lll),cptimes(lll)],...
+%                 get(ax,'ylim'),'Color',[0,0,0],...
+%                 'LineWidth',2,'LineStyle','--');
+%         end
+        xlabel('time','FontSize',18)
+        ylabel('posterior var','FontSize',18)
+        legend('learned','explicit change points')
+        title(['var h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',18)
     end
 end
 toc

@@ -75,7 +75,11 @@ kappa = log(rateHigh/rateLow);
 
 post_var_h=zeros(size(posttimes));
 post_mean_h=post_var_h;
-lbvar=post_var_h;%vector storing theoretical lower bound on variance
+%vector storing theoretical lower bound on variance
+%one entry per CP times
+lbvar=zeros(1,length(cptimes));
+ncp=0;
+
 nposttimes = length(posttimes);
 if nposttimes > 0
     idnxtposttime = 1;
@@ -159,10 +163,11 @@ while time<T
         
         %report lower bound on posterior variance
         %(alpha+n)/(beta+t)^2
-        ncp = sum(cptimes<t_new); % number of true change points by report time
-        lbvar(idnxtposttime)=(alpha+ncp)/(beta+t_new)^2;
-        
-        
+        if ncp < sum(cptimes<t_new)
+            ncp = sum(cptimes<t_new);% number of true change points by report time
+            lbvar(ncp)=(alpha+ncp)/(beta+t_new)^2;
+        end
+       
         vector=[exp(xp);exp(xm)];
         %disp(t_new)
         %disp(sum(marginalOverGamma))
