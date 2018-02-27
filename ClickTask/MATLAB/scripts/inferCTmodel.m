@@ -86,23 +86,25 @@ for priorVar_idx=1:nv
         meanCPcount=(0:gamma_max-1)*marginalCPcount;
         stdevCPcount=sqrt(((0:gamma_max-1).^2)*marginalCPcount-meanCPcount.^2);
         % plot marginal
-        mylines=plot(msect, postHp,'-b',...
-            'LineWidth', 3);
-        ax.YLim=[0,1];
+        mylines=plot(msect, meanCPcount,'-b',...
+             msect,meanCPcount+stdevCPcount,'-k',...
+             msect,max(meanCPcount-stdevCPcount,0),'-k',...
+            'LineWidth', 4);
+        ax.YLim=[0,2.2];
         %vertical lines for click times
-        vl1=line([SP(1),SP(1)],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',2,'LineStyle','--');
-        vl2=line([SP(2),SP(2)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
-        vl3=line([SP(3),SP(3)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',2,'LineStyle','--');
-        title(['SNR=',num2str(snr),', Var=',num2str(priorVar)])
+        vl1=line([SP(1),SP(1)],get(ax,'ylim'),'Color',[4,2,3]/4,'LineWidth',4,'LineStyle','--');
+        vl2=line([SP(2),SP(2)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',4,'LineStyle','--');
+        vl3=line([SP(3),SP(3)],get(ax,'ylim'),'Color',[2,3,4]/4,'LineWidth',4,'LineStyle','--');
+        title(['SNR=',num2str(snr),',     prior Var=',num2str(priorVar)])
         if snr==snrlist(1) & priorVar==varlist(1)
-            legend([mylines(1);vl1;vl2],...
-                'P(H+)','left click',...
+            legend([mylines(1:2);vl1;vl2],...
+                'mean','1 stdev','left click',...
                 'right click',...
                 'Location','NorthWest')
             legend BOXOFF
         end
-        if snr==snrlist(1)
-            ylabel('Posterior H+')
+        if snr==snrlist(1) 
+            ylabel('CP count')
         end
         if priorVar==varlist(end)
             xlabel('msec')
