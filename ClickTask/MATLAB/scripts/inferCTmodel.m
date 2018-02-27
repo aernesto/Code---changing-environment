@@ -21,7 +21,7 @@ dt=1/1000000;
 % max allowed change point count
 gamma_max=20;
 % hyperparameters for Gamma dist over hazard rate
-m=1; % mode of prior on h
+m=.5; % mean of prior on h
 priorState=[.5,.5];
 
 %trial duration (sec)
@@ -66,8 +66,11 @@ for priorVar_idx=1:nv
         i=sub2ind([nv,ns],iii,priorVar_idx);
         
         v=priorVar; % prior variance
-        beta = m / (2 * v) + sqrt(m^2 / (v^2) + 4 / v) / 2;
-        alpha = m * beta + 1;
+        beta=m/v;
+        alpha=beta*m;
+        % If m = mode of prior
+        %beta = m / (2 * v) + sqrt(m^2 / (v^2) + 4 / v) / 2;
+        %alpha = m * beta + 1;
         
         % perform inference
         [~,~,~,means,vars,lbvar]=returnPostH(lTrain, rTrain, rateLow, rateHigh, T, ...
@@ -110,25 +113,37 @@ for priorVar_idx=1:nv
         posttimes_inloop=[0,posttimes];
         
         figure(fig1)
-        subplot(nv,ns,i)
+        ax=subplot(nv,ns,i);
         grid on
         hold on
         %plot for posterior mean over h
         plot(posttimes_inloop,means,'-b',[0,T],[1,1],'-r','LineWidth',3)
+        %vertical lines for CP times
+        for lll=1:length(cptimes)
+            line([cptimes(lll),cptimes(lll)],...
+                get(ax,'ylim'),'Color',[4,2,3]/4,...
+                'LineWidth',2,'LineStyle','--');
+        end
         ylabel('posterior mean','FontSize',14)
         xlim([0,T])
         ylim([0,max(means)+.5])
         title(['mean h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',14)
-        legend('learned','true')
+        legend('learned','true','change points')
         %plot for posterior variance over h
         figure(fig2)
-        subplot(nv,ns,i)
+        ax=subplot(nv,ns,i);
         grid on
         hold on
         plot(posttimes_inloop,vars,'-b',posttimes_inloop, lbvar,'-r','LineWidth',3);
+        %vertical lines for CP times
+        for lll=1:length(cptimes)
+            line([cptimes(lll),cptimes(lll)],...
+                get(ax,'ylim'),'Color',[4,2,3]/4,...
+                'LineWidth',2,'LineStyle','--');
+        end
         xlabel('time','FontSize',14)
         ylabel('posterior var','FontSize',14)
-        legend('learned','theor. low bd')
+        legend('learned','theor. low bd','change points')
         xlim([0,T])
         ylim([0,max(abs(vars))+.5]);
         title(['var h, ','SNR=',num2str(snr),', Var=',num2str(priorVar)],'FontSize',14)
