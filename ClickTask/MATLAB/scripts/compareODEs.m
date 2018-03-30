@@ -13,12 +13,12 @@ h=2;
 init_cond=0;
 params= [init_cond,kappa,euler_dt,T,h];
 tic
-p_ours = evolveOurOde(stream, params);
+p_ours = evolveOurOde(stream, params, true);
 toc
 % compute evolution of p according to Rudemo's model
 paramsRudemo= [init_cond,highrate,lowrate,euler_dt,T,h];
 tic
-p_Rudemo = evolveRudemoOde(stream, paramsRudemo);
+p_Rudemo = evolveRudemoOde(stream, paramsRudemo, true);
 toc
 % plot both on same graph, and show true state on graph
 time=0:euler_dt:T;
