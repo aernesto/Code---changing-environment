@@ -10,7 +10,7 @@ euler_dt=0.0001;
 init=0;
 filename=['/home/radillo/Git/GitHub/LearningClicksTask/data/',...
     'ClickTrains_h1_rateHigh38_rateLow2_nTrials10000.mat'];
-%load(filename)
+load(filename)
 
 % now a cell array named data is in the environment with dimensions 15x2
 % dim1 corresponds to trial duration
@@ -72,7 +72,7 @@ for trial=1:ntrials
         end
     end
 % compute performance with our model
-    dec_var_ours=evolveOurOde(righttrain',[init,kappa,euler_dt,T,h],false);
+    dec_var_ours=evolveOurOde(righttrain',[init,highrate,lowrate,euler_dt,T,h],false);
     if dec_var_ours>0
         dec_ours=1;
     else

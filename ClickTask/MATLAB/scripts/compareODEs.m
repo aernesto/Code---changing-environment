@@ -11,7 +11,7 @@ euler_dt=0.0001;
 T=1;
 h=2;
 init_cond=0;
-params= [init_cond,kappa,euler_dt,T,h];
+params= [init_cond,highrate,lowrate,euler_dt,T,h];
 tic
 p_ours = evolveOurOde(stream, params, true);
 toc
