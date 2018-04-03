@@ -28,11 +28,11 @@ function x=evolveRudemoOde(train, params, fullEvolution)
         time = t*dt;
         if fullEvolution
             denom=highrate*exp(x(t))+lowrate;
-            deriv = -2*h*sinh(x(t))-diff/denom;
+            deriv = -2*h*sinh(x(t))-diff;
             x(new_idx)=x(t) + deriv*dt;
         else
             denom=highrate*exp(x)+lowrate;
-            deriv=-2*h*sinh(x)-diff/denom;
+            deriv=-2*h*sinh(x)-diff;
             oldx=x;
             x=x+deriv*dt;
         end
